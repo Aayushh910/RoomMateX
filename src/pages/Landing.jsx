@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { useState, useEffect } from 'react';
 import { rooms, roommates } from '../data/rooms';
+// import 
 
 export const Landing = () => {
   const [typedText, setTypedText] = useState('');
