@@ -1,26 +1,42 @@
-from pydantic import BaseModel
-from typing import Optional, Dict
-from datetime import datetime
+from pydantic import BaseModel, Field
+from uuid import UUID
+from typing import List
+
 
 class RoomCreate(BaseModel):
     title: str
-    description: Optional[str] = None
-    rent: int
-    deposit: Optional[int] = None
+    description: str
+
+    rent: float
+    deposit: float
+
     city: str
-    area: Optional[str] = None
-    room_type: Optional[str] = "private"
-    gender_preference: Optional[str] = "any"
-    furnished: Optional[bool] = False
-    house_rules: Optional[str] = None
-    amenities: Optional[Dict] = None
+    area: str
+
+    room_type: str
+    furnishing: str
+    preferred_gender: str
+
+    amenities: List[str]
+    house_rules: str | None = None
+
+    image_urls: List[str] = Field(min_length=3)
 
 
-class RoomResponse(RoomCreate):
-    id: int
-    owner_id: int
-    is_available: bool
-    created_at: datetime
+class RoomResponse(BaseModel):
+    id: UUID
+    title: str
+    description: str
+    rent: float
+    deposit: float
+    city: str
+    area: str
+    room_type: str
+    furnishing: str
+    preferred_gender: str
+    amenities: List[str]
+    house_rules: str | None
+    is_active: bool
 
     class Config:
         from_attributes = True
