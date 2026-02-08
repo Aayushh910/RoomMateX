@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in on mount
+    // Check if user is logged in from localStorage
     const storedUser = localStorage.getItem('roomatex_user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -32,8 +32,12 @@ export const AuthProvider = ({ children }) => {
     const newUser = {
       ...userData,
       id: Date.now().toString(),
+      role: 'user',
       verified: false,
-      trustScore: 0,
+      profilePhoto: null,
+      listings: [],
+      wishlist: [],
+      viewedRooms: [],
       createdAt: new Date().toISOString(),
     };
     setUser(newUser);
@@ -52,14 +56,38 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('roomatex_user', JSON.stringify(updatedUser));
   };
 
+  const addToWishlist = (roomId) => {
+    const wishlist = user.wishlist || [];
+    if (!wishlist.includes(roomId)) {
+      updateUser({ wishlist: [...wishlist, roomId] });
+    }
+  };
+
+  const removeFromWishlist = (roomId) => {
+    const wishlist = user.wishlist || [];
+    updateUser({ wishlist: wishlist.filter(id => id !== roomId) });
+  };
+
+  const addViewedRoom = (roomId) => {
+    const viewedRooms = user.viewedRooms || [];
+    if (!viewedRooms.includes(roomId)) {
+      const updated = [roomId, ...viewedRooms].slice(0, 10); // Keep last 10
+      updateUser({ viewedRooms: updated });
+    }
+  };
+
   const value = {
     user,
-    loading,
     login,
     signup,
     logout,
     updateUser,
+    addToWishlist,
+    removeFromWishlist,
+    addViewedRoom,
+    loading,
     isAuthenticated: !!user,
+    isAdmin: user?.role === 'admin',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
