@@ -294,6 +294,7 @@ export const AddRoomPage = () => {
             />
           </div>
 
+
           <div className="flex gap-4">
             <button type="button" onClick={() => navigate('/dashboard')} className="btn-outline flex-1">
               Cancel
