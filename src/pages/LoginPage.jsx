@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import API_BASE from '../services/api';
 
 export const LoginPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -9,7 +10,7 @@ export const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -18,41 +19,60 @@ export const LoginPage = () => {
       return;
     }
 
-    // Demo login - Check for admin and user credentials
-    if (formData.email === 'admin@test.com' && formData.password === 'admin123') {
+    try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (Array.isArray(data.detail)) {
+          setError(data.detail[0].msg);
+        } else {
+          setError(data.detail || 'Invalid credentials');
+        }
+        return;
+      }
+
+
+      // ✅ Store token
+      localStorage.setItem('access_token', data.access_token);
+
+      // ✅ Save user in auth context
       login({
-        id: 'admin1',
-        name: 'Admin User',
-        email: formData.email,
-        role: 'admin',
-        phone: '+91 98765 43200',
-        city: 'Pune',
+        id: data.user.id,
+        name: data.user.full_name,
+        email: data.user.email,
+        role: data.user.role,
+        phone: data.user.phone_number,
+        city: data.user.city,
         verified: true,
         profilePhoto: null,
         listings: [],
         wishlist: [],
         viewedRooms: [],
       });
-      navigate('/admin');
-    } else if (formData.email === 'user@test.com' && formData.password === 'password') {
-      // Regular user login
-      login({
-        id: 'user' + Date.now(),
-        name: 'Demo User',
-        email: formData.email,
-        role: 'user',
-        phone: '+91 98765 43210',
-        city: 'Pune',
-        verified: true,
-        profilePhoto: null,
-        listings: [],
-        wishlist: [],
-        viewedRooms: [],
-      });
-      navigate('/dashboard');
-    } else {
-      setError('Invalid credentials');
+
+      // ✅ Redirect based on role
+      if (data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
+
+    } catch (err) {
+      console.error(err);
+      setError('Server error. Try again.');
     }
+
   };
 
   return (

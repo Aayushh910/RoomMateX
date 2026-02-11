@@ -48,52 +48,64 @@ export const AddRoomPage = () => {
     }
   }, [editId, user.id]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const validImages = formData.images.filter(img => img.trim() !== '');
     if (validImages.length < 3) {
       setToast({ message: 'Please provide at least 3 images', type: 'error' });
       return;
     }
 
-    const rooms = JSON.parse(localStorage.getItem('roomatex_rooms') || '[]');
-    
-    if (editId) {
-      const index = rooms.findIndex(r => r.id === editId);
-      if (index !== -1) {
-        rooms[index] = {
-          ...rooms[index],
-          ...formData,
-          images: validImages,
-        };
-      }
-    } else {
-      const newRoom = {
-        id: Date.now().toString(),
-        ...formData,
-        images: validImages,
-        owner: {
-          id: user.id,
-          name: user.name,
-          phone: user.phone,
-          verified: user.verified,
-        },
-        active: true,
-        createdAt: new Date().toISOString(),
-      };
-      rooms.push(newRoom);
-    }
+    try {
+      const token = localStorage.getItem('access_token');
 
-    localStorage.setItem('roomatex_rooms', JSON.stringify(rooms));
-    setToast({ message: editId ? 'Room updated successfully' : 'Room listed successfully', type: 'success' });
-    setTimeout(() => navigate('/dashboard'), 1500);
+      const response = await fetch('http://127.0.0.1:8000/api/v1/rooms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description,
+          rent: Number(formData.rent),
+          deposit: Number(formData.deposit),
+          city: formData.city,
+          area: formData.area,
+          room_type: formData.roomType,
+          furnishing: formData.furnishing,
+          preferred_gender: formData.preferredGender,
+          amenities: formData.amenities,
+          house_rules: formData.rules.join('\n'),
+          image_urls: validImages,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setToast({ message: data.detail || 'Failed to list room', type: 'error' });
+        return;
+      }
+
+      setToast({ message: 'Room listed successfully!', type: 'success' });
+
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+
+    } catch (error) {
+      console.error(error);
+      setToast({ message: 'Server error', type: 'error' });
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-      
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">{editId ? 'Edit Room' : 'List Your Room'}</h1>
 
