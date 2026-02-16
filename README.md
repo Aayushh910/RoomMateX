@@ -2,7 +2,7 @@
 
 A modern, production-level room and roommate discovery platform built with React, Vite, and Tailwind CSS.
 
-## 🚀 Features
+## Features
 
 ### User Features
 - **Dashboard**: Dynamic dashboard with recommended rooms, roommates, and personalized sections
@@ -20,16 +20,16 @@ A modern, production-level room and roommate discovery platform built with React
 - **Manage Rooms**: Activate/deactivate and remove room listings
 
 ### Technical Features
-- ✅ Fully working navigation with React Router
-- ✅ Context API for state management
-- ✅ Protected routes with role-based access
-- ✅ Responsive design (mobile-first)
-- ✅ Toast notifications
-- ✅ Modal dialogs
-- ✅ LocalStorage persistence
-- ✅ Professional UI with Tailwind CSS
+- Fully working navigation with React Router
+- Context API for state management
+- Protected routes with role-based access
+- Responsive design (mobile-first)
+- Toast notifications
+- Modal dialogs
+- LocalStorage persistence
+- Professional UI with Tailwind CSS
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 - Node.js (v16 or higher)
@@ -50,7 +50,7 @@ A modern, production-level room and roommate discovery platform built with React
 3. **Open browser**:
    Navigate to `http://localhost:3000`
 
-## 🔐 Demo Credentials
+## Demo Credentials
 
 ### Admin Account
 - **Email**: admin@roomatex.com
@@ -60,7 +60,7 @@ A modern, production-level room and roommate discovery platform built with React
 - **Email**: any valid email
 - **Password**: any password
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 roomatex/
@@ -103,7 +103,7 @@ roomatex/
 └── postcss.config.js
 ```
 
-## 🎨 Design System
+## Design System
 
 ### Colors
 - **Primary**: Blue tones (#0ea5e9)
@@ -115,7 +115,7 @@ roomatex/
 - **Display**: Poppins (headings, titles)
 - **Body**: Inter (paragraphs, text)
 
-## 🔄 User Flow
+## User Flow
 
 ### Public Routes
 1. **Landing Page** (`/`) - Marketing page with features and testimonials
@@ -137,7 +137,7 @@ roomatex/
 2. **Manage Users** (`/admin/users`) - User management
 3. **Manage Rooms** (`/admin/rooms`) - Room moderation
 
-## ✨ Key Features
+## Key Features
 
 ### Dynamic Dashboard Sections
 - Recommended Rooms (always visible)
@@ -147,10 +147,10 @@ roomatex/
 - Wishlist (conditional - only if user has wishlist items)
 
 ### Room Management (Full CRUD)
-- ✅ **Create**: Add new room with validation (min 3 images)
-- ✅ **Read**: View room details with gallery
-- ✅ **Update**: Edit existing room listings
-- ✅ **Delete**: Remove rooms with confirmation modal
+- **Create**: Add new room with validation (min 3 images)
+- **Read**: View room details with gallery
+- **Update**: Edit existing room listings
+- **Delete**: Remove rooms with confirmation modal
 
 ### Profile Completion
 - Tracks completion percentage based on:
@@ -160,7 +160,7 @@ roomatex/
   - Room listings
   - Wishlist activity
 
-## 🛠️ Technologies
+## Technologies
 
 - **Frontend**: React 18
 - **Build Tool**: Vite
@@ -169,21 +169,21 @@ roomatex/
 - **State Management**: Context API
 - **Storage**: LocalStorage
 
-## 📱 Responsive Design
+## Responsive Design
 
 - Mobile-first approach
 - Breakpoints: sm, md, lg, xl
 - Hamburger menu for mobile
 - Optimized layouts for all screen sizes
 
-## 🔒 Authentication
+## Authentication
 
 - Role-based access control (user, admin)
 - Protected routes
 - Public routes redirect to dashboard if authenticated
 - LocalStorage persistence
 
-## 🎯 Production Ready
+## Production Ready
 
 - No broken links or dead buttons
 - All routes fully functional
@@ -192,14 +192,14 @@ roomatex/
 - Clean code structure
 - Ready for deployment
 
-## 📝 Notes
+## Notes
 
 - All data is stored in browser LocalStorage
 - Mock data includes 6 rooms and 6 roommates
 - Contact form submissions show success message (no backend)
 - Images use Unsplash and Pravatar for demo purposes
 
-## 🚀 Build for Production
+## Build for Production
 
 ```bash
 npm run build
@@ -207,10 +207,10 @@ npm run build
 
 This creates an optimized production build in the `dist` folder.
 
-## 📄 License
+## License
 
 This project is for educational purposes.
 
 ---
 
-**Built with ❤️ using React + Vite + Tailwind CSS**
+**Built with care using React + Vite + Tailwind CSS**

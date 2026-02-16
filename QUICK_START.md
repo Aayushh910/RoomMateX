@@ -1,4 +1,4 @@
-# 🚀 RoomMateX - Quick Start Guide
+# RoomMateX - Quick Start Guide
 
 ## Installation & Setup (3 Steps)
 
@@ -18,7 +18,7 @@ Navigate to: `http://localhost:3000`
 
 ---
 
-## 🔑 Demo Credentials
+## Demo Credentials
 
 ### Admin Login
 - **Email**: `admin@roomatex.com`
@@ -32,7 +32,7 @@ Navigate to: `http://localhost:3000`
 
 ---
 
-## 🎯 Key Features to Test
+## Key Features to Test
 
 ### As a User:
 1. **Dashboard** - View recommended rooms and roommates
@@ -49,7 +49,7 @@ Navigate to: `http://localhost:3000`
 
 ---
 
-## 📋 Test Scenarios
+## Test Scenarios
 
 ### Scenario 1: New User Journey
 1. Go to landing page (`/`)
@@ -81,7 +81,7 @@ Navigate to: `http://localhost:3000`
 
 ---
 
-## 🖼️ Sample Image URLs for Testing
+## Sample Image URLs for Testing
 
 Use these Unsplash URLs when adding rooms:
 
@@ -95,7 +95,7 @@ https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?w=800
 
 ---
 
-## ⚡ Quick Navigation
+## Quick Navigation
 
 ### Public Pages (No Login Required)
 - `/` - Landing Page
@@ -119,7 +119,7 @@ https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?w=800
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Port Already in Use
 If port 3000 is busy:
@@ -146,7 +146,7 @@ Manually navigate to: `http://localhost:3000`
 
 ---
 
-## 📱 Mobile Testing
+## Mobile Testing
 
 The app is fully responsive. To test on mobile:
 1. Start dev server: `npm run dev`
@@ -160,7 +160,7 @@ Or use Chrome DevTools:
 
 ---
 
-## 🎨 Customization Tips
+## Customization Tips
 
 ### Change Colors
 Edit `tailwind.config.js` → `theme.extend.colors`
@@ -174,7 +174,7 @@ Edit `src/data/mockData.js`
 
 ---
 
-## 📦 Build for Production
+## Build for Production
 
 ```bash
 npm run build
@@ -189,7 +189,7 @@ npm run preview
 
 ---
 
-## ✅ Verification Checklist
+## Verification Checklist
 
 - [ ] All pages load without errors
 - [ ] Login/Signup works
@@ -204,7 +204,7 @@ npm run preview
 
 ---
 
-## 💡 Tips
+## Tips
 
 1. **LocalStorage**: All data is saved in browser LocalStorage
 2. **Mock Data**: Pre-loaded with 6 rooms and 6 roommates

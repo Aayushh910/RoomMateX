@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { ProtectedRoute, AdminRoute, PublicRoute } from './routes/ProtectedRoute';
-import { Navbar } from './components/Navbar';
+import { ThemeProvider } from './context/ThemeContext';
+import { PageBackground } from './components/PageBackground';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Pages
 import { LandingPage } from './pages/LandingPage';
@@ -10,72 +11,46 @@ import { SignupPage } from './pages/SignupPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { RoomsPage } from './pages/RoomsPage';
 import { RoomDetailsPage } from './pages/RoomDetailsPage';
-import { RoommateProfilePage } from './pages/RoommateProfilePage';
 import { AddRoomPage } from './pages/AddRoomPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { RoommateProfilePage } from './pages/RoommateProfilePage';
 import { WishlistPage } from './pages/WishlistPage';
 import { ContactPage } from './pages/ContactPage';
-
-// Admin
-import { AdminDashboard } from './admin/AdminDashboard';
-import { ManageUsers } from './admin/ManageUsers';
-import { ManageRooms } from './admin/ManageRooms';
+import { CompleteProfilePage } from './pages/CompleteProfilePage';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { VerificationPage } from './pages/VerificationPage';
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
-          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-          <Route path="/signup" element={<PublicRoute><SignupPage /></PublicRoute>} />
+    <ThemeProvider>
+      <PageBackground />
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
 
-          {/* Protected Routes with Navbar */}
-          <Route element={<ProtectedRoute><NavbarLayout /></ProtectedRoute>}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/rooms" element={<RoomsPage />} />
-            <Route path="/room/:id" element={<RoomDetailsPage />} />
-            <Route path="/roommate/:id" element={<RoommateProfilePage />} />
-            <Route path="/add-room" element={<AddRoomPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/wishlist" element={<WishlistPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-          </Route>
+            {/* Private/Protected Routes */}
+            <Route path="/rooms" element={<ProtectedRoute><RoomsPage /></ProtectedRoute>} />
+            <Route path="/rooms/:id" element={<ProtectedRoute><RoomDetailsPage /></ProtectedRoute>} />
+            <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
+            <Route path="/add-room" element={<ProtectedRoute><AddRoomPage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/verification" element={<ProtectedRoute><VerificationPage /></ProtectedRoute>} />
+            <Route path="/roommate/:id" element={<ProtectedRoute><RoommateProfilePage /></ProtectedRoute>} />
+            <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
+            <Route path="/complete-profile" element={<ProtectedRoute><CompleteProfilePage /></ProtectedRoute>} />
 
-          {/* Admin Routes with Navbar */}
-          <Route element={<AdminRoute><NavbarLayout /></AdminRoute>}>
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/users" element={<ManageUsers />} />
-            <Route path="/admin/rooms" element={<ManageRooms />} />
-          </Route>
-
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
-  );
-}
-
-function NavbarLayout() {
-  return (
-    <>
-      <Navbar />
-      <Routes>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/rooms" element={<RoomsPage />} />
-        <Route path="/room/:id" element={<RoomDetailsPage />} />
-        <Route path="/roommate/:id" element={<RoommateProfilePage />} />
-        <Route path="/add-room" element={<AddRoomPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/wishlist" element={<WishlistPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/users" element={<ManageUsers />} />
-        <Route path="/admin/rooms" element={<ManageRooms />} />
-      </Routes>
-    </>
+            {/* Fallback - redirect to landing */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
