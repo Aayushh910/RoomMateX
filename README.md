@@ -1,128 +1,261 @@
-# 🏠 RoomMateX – Room & Roommate Matching Platform
+# RoomMateX Backend API
 
-A secure, scalable full-stack web application designed to help users find compatible rooms and roommates within a specific location.
+Production-ready FastAPI backend for RoomMateX room/roommate finding platform.
 
-RoomMateX focuses on **preference-based matching, trust, and safety**, making shared living more comfortable and reliable.
+## Tech Stack
 
----
+- **Framework**: FastAPI
+- **Database**: PostgreSQL
+- **ORM**: SQLAlchemy
+- **Authentication**: JWT (JSON Web Tokens)
+- **Password Hashing**: bcrypt
+- **Validation**: Pydantic
+- **Migrations**: Alembic
 
-## 📌 Project Overview
+## Setup Instructions
 
-RoomMateX is built to solve common shared-living problems by providing:
+### 1. Install Dependencies
 
-- Reliable room and roommate discovery  
-- Preference-based compatibility matching  
-- A trust system powered by reviews and admin moderation  
+```bash
+cd backend
+pip install -r requirements.txt
+```
 
-The platform supports **two primary roles**:
+### 2. Setup PostgreSQL Database
 
-- 👤 **User** – Room seekers & room owners  
-- 🛡️ **Admin** – Platform moderator for safety, verification, and trust  
+Install PostgreSQL and create a database:
 
----
+```sql
+CREATE DATABASE RoomMateX_DB;
+CREATE USER postgres WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE RoomMateX_DB TO postgres;
+```
 
-## 🎯 Objectives
+### 3. Configure Environment Variables
 
-- Provide a reliable platform for room & roommate matching  
-- Reduce conflicts using lifestyle and preference matching  
-- Ensure safety through authentication, admin moderation, and reviews  
-- Design a scalable system with future expansion and revenue potential  
+Copy `.env.example` to `.env` in the **root directory** (not in backend folder):
 
----
+```bash
+copy .env.example .env
+```
 
-## 🌟 Key Features & Functionality
+Edit `.env` in root:
+```
+DATABASE_URL=postgresql://postgres:your_password@localhost:5432/roommateX
+SECRET_KEY=your-super-secret-key-change-this
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+FRONTEND_URL=http://localhost:5173
+BACKEND_HOST=0.0.0.0
+BACKEND_PORT=8000
+```
 
-### 👤 User Features
+**Generate a secure SECRET_KEY**:
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
 
-- User registration and secure login  
-- Email / OTP-based verification  
-- Profile creation including:
-  - Age and profession  
-  - Hobbies and lifestyle preferences  
-  - Budget range  
-- Add, update, and delete room listings  
-- Search rooms and roommates by location  
-- Compatibility score based on preferences  
-- In-app communication (chat-ready architecture)  
-- View trust score and user reviews  
-- Submit reviews after verified room stay  
+**Note**: All environment variables are centralized in the root `.env` file for both frontend and backend.
 
----
+### 4. Initialize Database
 
-### 🛡️ Admin Features
+Run migrations:
 
-- Separate admin dashboard  
-- View and manage all users  
-- Verify or reject user accounts  
-- Monitor and moderate room listings  
-- Handle reports and complaints  
-- Block or suspend malicious users  
-- Maintain overall platform safety and trust  
+```bash
+alembic revision --autogenerate -m "Initial migration"
+alembic upgrade head
+```
 
----
+Or let SQLAlchemy create tables automatically (already configured in main.py).
 
-## 🔐 Authentication & Security
+### 5. Run the Server
 
-- Password hashing using bcrypt / passlib  
-- JWT-based authentication  
-- Role-based access control (User / Admin)  
-- Protected API routes  
-- Report and block functionality  
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
----
+Server will start at: `http://localhost:8000`
 
-## ⭐ Review & Trust System
+API Documentation: `http://localhost:8000/docs`
 
-- Reviews allowed only after verified interactions  
-- Ratings based on:
-  - Cleanliness  
-  - Behavior  
-  - Communication  
-- Overall trust score displayed on user profiles  
-- Repeated negative reviews trigger admin actions  
+## API Endpoints
 
----
+### Authentication
 
-## 🏗️ System Architecture
-React (Frontend)
-↓
-FastAPI (Backend – REST APIs)
-↓
-PostgreSQL (Database)
+#### Register User
+```
+POST /auth/register
+Content-Type: application/json
 
+{
+  "full_name": "John Doe",
+  "phone_number": "+1234567890",
+  "email": "john@example.com",
+  "password": "securepass123",
+  "city": "New York",
+  "role": "room_seeker"
+}
 
-## 🛠️ Technology Stack
+Response (201):
+{
+  "message": "User registered successfully",
+  "user": {
+    "id": "uuid",
+    "full_name": "John Doe",
+    "email": "john@example.com",
+    "role": "room_seeker",
+    "city": "New York",
+    "phone_number": "+1234567890",
+    "is_active": true,
+    "created_at": "2024-01-01T00:00:00"
+  }
+}
+```
 
-### 🌐 Frontend
-- React.js (JavaScript)  
-- HTML5, CSS3  
-- Tailwind CSS / Bootstrap  
-- Axios / Fetch API  
+#### Login User
+```
+POST /auth/login
+Content-Type: application/json
 
+{
+  "email": "john@example.com",
+  "password": "securepass123"
+}
 
-### ⚙️ Backend
-- Python  
-- FastAPI  
-- RESTful API architecture  
-- JWT authentication  
+Response (200):
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "user": {
+    "id": "uuid",
+    "full_name": "John Doe",
+    "email": "john@example.com",
+    "role": "room_seeker",
+    "city": "New York",
+    "phone_number": "+1234567890",
+    "is_active": true,
+    "created_at": "2024-01-01T00:00:00"
+  }
+}
+```
 
+## Frontend Integration
 
-### 🗄️ Database
-- PostgreSQL  
-- SQLAlchemy ORM
+### Storing Token
 
+In your frontend (React), store the token in localStorage after successful login:
 
-## 🚀 Future Enhancements
-- AI/ML-based roommate recommendation  
-- Real-time chat system  
-- Mobile application (Android / iOS)  
-- Identity verification system  
-- Payment integration for premium features
+```javascript
+// After successful login
+const response = await fetch('http://localhost:8000/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, password })
+});
 
+const data = await response.json();
 
-## 👥 Project Contributors
-- **Frontend Development:** Mahek Saradva  
-- **Backend Development:** Aayush Savaliya  
+// Store token
+localStorage.setItem('access_token', data.access_token);
+localStorage.setItem('user', JSON.stringify(data.user));
+```
 
+### Making Authenticated Requests
 
-⭐ If you like this project, don’t forget to star the repository!
+```javascript
+const token = localStorage.getItem('access_token');
+
+const response = await fetch('http://localhost:8000/protected-route', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+```
+
+### Logout
+
+```javascript
+localStorage.removeItem('access_token');
+localStorage.removeItem('user');
+```
+
+## Project Structure
+
+```
+backend/
+├── app/
+│   ├── core/
+│   │   ├── config.py          # Settings and environment variables
+│   │   └── security.py        # JWT and password hashing
+│   ├── models/
+│   │   └── user.py            # SQLAlchemy User model
+│   ├── schemas/
+│   │   └── user.py            # Pydantic schemas for validation
+│   ├── routes/
+│   │   └── auth.py            # Authentication endpoints
+│   ├── services/
+│   │   └── auth_service.py    # Business logic
+│   ├── utils/
+│   │   └── dependencies.py    # JWT authentication dependency
+│   ├── database.py            # Database connection
+│   └── main.py                # FastAPI app initialization
+├── alembic/                   # Database migrations
+├── requirements.txt           # Python dependencies
+├── .env.example              # Environment variables template
+└── README.md                 # This file
+```
+
+## Error Handling
+
+The API returns appropriate HTTP status codes:
+
+- `200`: Success
+- `201`: Created
+- `400`: Bad Request (validation errors, duplicate email)
+- `401`: Unauthorized (invalid credentials)
+- `403`: Forbidden (inactive account)
+- `404`: Not Found
+- `500`: Internal Server Error
+
+## Security Features
+
+- Password hashing with bcrypt
+- JWT token authentication
+- CORS protection
+- Input validation with Pydantic
+- SQL injection protection via SQLAlchemy ORM
+- Environment-based configuration
+
+## Development
+
+### Run Tests
+```bash
+pytest
+```
+
+### Create New Migration
+```bash
+alembic revision --autogenerate -m "description"
+alembic upgrade head
+```
+
+### Rollback Migration
+```bash
+alembic downgrade -1
+```
+
+## Production Deployment
+
+1. Set strong `SECRET_KEY`
+2. Use production PostgreSQL database
+3. Set `FRONTEND_URL` to production domain
+4. Use environment variables (never commit `.env`)
+5. Enable HTTPS
+6. Use gunicorn or similar WSGI server
+7. Set up proper logging
+8. Configure rate limiting
+
+## Support
+
+For issues or questions, contact the development team.

@@ -1,24 +1,62 @@
 from fastapi import FastAPI
-from app.db.session import engine
-from app.db.base import Base
-from app.api.v1.auth import router as auth_router
-from app.api.v1.rooms import router as rooms_router
-from app.api.v1.users import router as users_router
-from app.api.v1.recommendations import router as recommendations_router
-from app.api.v1.wishlist import router as wishlist_router
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from app.core.config import settings
+from app.routes import auth, user, property, wishlist, review, contact, report, dashboard
+from pathlib import Path
 
+app = FastAPI(
+    title="RoomMateX API",
+    description="Backend API for RoomMateX - Room/Roommate Finding Platform",
+    version="1.0.0"
+)
 
-app = FastAPI()
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.FRONTEND_URL, "http://localhost:5173", "http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-Base.metadata.create_all(bind=engine)
+# Serve uploaded files
+uploads_dir = Path("uploads")
+uploads_dir.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-app.include_router(auth_router, prefix="/api/v1")
-app.include_router(users_router, prefix="/api/v1")
-app.include_router(rooms_router, prefix="/api/v1")
-app.include_router(recommendations_router, prefix="/api/v1")
-app.include_router(wishlist_router,prefix="/api/v1")
+# Include routers
+app.include_router(auth.router)
+app.include_router(user.router)
+app.include_router(property.router)
+app.include_router(wishlist.router)
+app.include_router(review.router)
+app.include_router(contact.router)
+app.include_router(report.router)
+app.include_router(dashboard.router)
+
 
 @app.get("/")
 def root():
-    return {"message": "RoomMateX Backend Running 🚀"}
+    return {
+        "message": "Welcome to RoomMateX API",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
 
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
+
+# Create database tables on startup (only if database is accessible)
+@app.on_event("startup")
+async def startup_event():
+    try:
+        from app.database import engine, Base
+        Base.metadata.create_all(bind=engine)
+        print("✓ Database tables created successfully")
+    except Exception as e:
+        print(f"⚠ Warning: Could not create database tables: {e}")
+        print("⚠ Please ensure PostgreSQL is running and credentials are correct in .env file")

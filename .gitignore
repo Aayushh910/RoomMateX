@@ -53,4 +53,11 @@ htmlcov/
 # ========================
 uploads/
 
-
+# ========================
+# Project specific ignores
+# ========================
+alembic
+dependencies
+routes
+services
+alembic.ini
