@@ -39,9 +39,7 @@ app.include_router(dashboard.router)
 @app.get("/")
 def root():
     return {
-        "message": "Welcome to RoomMateX API",
-        "version": "1.0.0",
-        "docs": "/docs"
+        "message": "Successfulllllllllllllllllllllllll!😌",
     }
 
 
