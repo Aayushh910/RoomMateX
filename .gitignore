@@ -58,6 +58,5 @@ uploads/
 # ========================
 alembic
 dependencies
-routes
 services
 alembic.ini
