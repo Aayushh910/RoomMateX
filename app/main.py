@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
-from app.routes import auth, user, property, wishlist, review, contact, report, dashboard
+from app.routes import auth, user, property, wishlist, review, report, dashboard, admin
 from pathlib import Path
 
 app = FastAPI(
@@ -31,9 +31,9 @@ app.include_router(user.router)
 app.include_router(property.router)
 app.include_router(wishlist.router)
 app.include_router(review.router)
-app.include_router(contact.router)
 app.include_router(report.router)
 app.include_router(dashboard.router)
+app.include_router(admin.router)
 
 
 @app.get("/")

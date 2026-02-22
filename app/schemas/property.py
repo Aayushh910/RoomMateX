@@ -247,23 +247,6 @@ class WishlistResponse(BaseModel):
         from_attributes = True
 
 
-# Contact Request Schemas
-class ContactRequestCreate(BaseModel):
-    message: Optional[str] = Field(None, max_length=500)
-
-
-class ContactRequestResponse(BaseModel):
-    id: UUID
-    property_id: UUID
-    sender_id: UUID
-    owner_id: UUID
-    message: Optional[str]
-    created_at: datetime
-    
-    class Config:
-        from_attributes = True
-
-
 # Report Schemas
 class ReportCreate(BaseModel):
     reason: str = Field(..., min_length=10, max_length=500)
@@ -284,6 +267,8 @@ class ReportResponse(BaseModel):
 class OwnerResponse(BaseModel):
     id: UUID
     full_name: str
+    email: str
+    phone: Optional[str]
     role: str
     is_verified: bool
     
@@ -329,6 +314,8 @@ class PropertyDetailsResponse(BaseModel):
         owner_data = OwnerResponse(
             id=obj.owner.id,
             full_name=obj.owner.full_name,
+            email=obj.owner.email,
+            phone=obj.owner.phone_number,
             role=obj.owner.role.value,
             is_verified=obj.owner.is_verified
         )

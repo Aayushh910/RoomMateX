@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, validator
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
 from app.models.user import UserRole
@@ -37,6 +37,12 @@ class UserResponse(BaseModel):
     occupation: Optional[str] = None
     age: Optional[int] = None
     bio: Optional[str] = None
+    profile_photo: Optional[str] = None
+    gender_preference: Optional[str] = None
+    budget_min: Optional[int] = None
+    budget_max: Optional[int] = None
+    lifestyle: Optional[str] = None
+    interests: Optional[str] = None
     created_at: datetime
     
     class Config:
@@ -49,6 +55,11 @@ class UserUpdate(BaseModel):
     bio: Optional[str] = Field(None, max_length=500)
     city: Optional[str] = Field(None, min_length=2, max_length=100)
     phone_number: Optional[str] = Field(None, min_length=10, max_length=15)
+    gender_preference: Optional[str] = Field(None, max_length=20)
+    budget_min: Optional[int] = Field(None, ge=0)
+    budget_max: Optional[int] = Field(None, ge=0)
+    lifestyle: Optional[str] = None  # JSON string
+    interests: Optional[str] = None  # JSON string
     
     @validator('phone_number')
     def validate_phone(cls, v):
@@ -64,8 +75,13 @@ class UserRegisterResponse(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str
     user: UserResponse
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
 
 
 class OTPRequest(BaseModel):

@@ -125,6 +125,13 @@ class Wishlist(Base):
     user = relationship("User", backref="wishlists")
 
 
+class RequestStatus(str, enum.Enum):
+    """Request status enum"""
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
+
+
 class ContactRequest(Base):
     __tablename__ = "contact_requests"
 
@@ -133,6 +140,7 @@ class ContactRequest(Base):
     sender_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     owner_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     message = Column(Text, nullable=True)
+    status = Column(SQLEnum(RequestStatus), nullable=False, default=RequestStatus.pending)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
     # Relationships

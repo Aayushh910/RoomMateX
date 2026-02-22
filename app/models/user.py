@@ -28,6 +28,14 @@ class User(Base):
     occupation = Column(String, nullable=True)
     age = Column(Integer, nullable=True)
     bio = Column(Text, nullable=True)
+    profile_photo = Column(String, nullable=True)  # URL to profile photo
+    
+    # Preference fields
+    gender_preference = Column(String, nullable=True)
+    budget_min = Column(Integer, nullable=True)
+    budget_max = Column(Integer, nullable=True)
+    lifestyle = Column(Text, nullable=True)  # JSON array stored as text
+    interests = Column(Text, nullable=True)  # JSON array stored as text
     
     # Verification fields
     is_verified = Column(Boolean, default=False, nullable=False)
