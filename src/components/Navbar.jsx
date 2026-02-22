@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
+import { getImageUrl } from '../utils/imageUtils';
 
 export const Navbar = () => {
   const { theme } = useTheme();
@@ -15,67 +16,75 @@ export const Navbar = () => {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 pt-6 px-4">
-      <nav className="max-w-7xl mx-auto bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-blue-900/5 dark:shadow-none border border-white/50 dark:border-slate-800 rounded-2xl transition-all duration-300">
+    <div className="fixed top-0 left-0 right-0 z-50 pt-4 px-4">
+      <nav className="max-w-7xl mx-auto bg-white/80 backdrop-blur-xl shadow-lg shadow-gray-200/50 border border-gray-100 rounded-2xl transition-all duration-300">
         <div className="px-6 md:px-8">
-          <div className="flex justify-between h-20 items-center">
+          <div className="flex justify-between h-14 items-center">
             {/* Logo */}
-            <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl bg-gray-900 dark:bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 transform group-hover:scale-110 transition-all duration-300 group-hover:shadow-indigo-500/40">
-                <svg className="w-5 h-5 text-white transform group-hover:rotate-12 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2.5 group">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white shadow-md shadow-blue-500/30 transform group-hover:scale-110 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-blue-500/40">
+                <svg className="w-4 h-4 text-white transform group-hover:rotate-12 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                 </svg>
               </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white tracking-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-all duration-300">
+              <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight group-hover:from-blue-700 group-hover:to-purple-700 transition-all duration-300">
                 RoomMateX
               </span>
             </Link>
 
             {/* Desktop Navigation */}
             {user && (
-              <div className="hidden md:flex items-center space-x-8">
-                <Link to="/dashboard" className="text-gray-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-300 text-sm hover:scale-110 hover:-translate-y-1">Dashboard</Link>
-                <Link to="/rooms" className="text-gray-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-300 text-sm hover:scale-110 hover:-translate-y-1">Find Rooms</Link>
-                <Link to="/add-room" className="text-gray-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-300 text-sm hover:scale-110 hover:-translate-y-1">List Room</Link>
-                <Link to="/contact" className="text-gray-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-300 text-sm hover:scale-110 hover:-translate-y-1">Contact</Link>
+              <div className="hidden md:flex items-center space-x-6">
+                <Link to="/dashboard" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">Dashboard</Link>
+                <Link to="/rooms" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">Find Rooms</Link>
+                <Link to="/add-room" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">List Room</Link>
+                <Link to="/contact" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">Contact</Link>
               </div>
             )}
 
             {!user && (
-              <div className="hidden md:flex items-center space-x-8">
-                <Link to="/" className="text-gray-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-300 text-sm hover:scale-110 hover:-translate-y-1">Home</Link>
-                <Link to="/rooms" className="text-gray-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-300 text-sm hover:scale-110 hover:-translate-y-1">Find Rooms</Link>
-                <Link to="/contact" className="text-gray-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-300 text-sm hover:scale-110 hover:-translate-y-1">Contact</Link>
+              <div className="hidden md:flex items-center space-x-6">
+                <Link to="/" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">Home</Link>
+                <Link to="/rooms" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">Find Rooms</Link>
+                <Link to="/contact" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">Contact</Link>
               </div>
             )}
 
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {user ? (
                 <>
-                  <Link to="/profile" className="hidden md:flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-primary-50 to-blue-50 hover:from-primary-100 hover:to-blue-100 border border-primary-200 hover:border-primary-300 transition-all duration-300 group shadow-sm hover:shadow-md">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-110 transition-transform">
-                      {user.name?.[0] || 'U'}
-                    </div>
+                  <Link to="/profile" className="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 group shadow-sm hover:shadow-md">
+                    {user.profile_photo ? (
+                      <img 
+                        src={getImageUrl(user.profile_photo)} 
+                        alt={user.name} 
+                        className="w-7 h-7 rounded-full object-cover shadow-md group-hover:scale-110 transition-transform"
+                      />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-md group-hover:scale-110 transition-transform">
+                        {user.name?.[0] || 'U'}
+                      </div>
+                    )}
                     <div className="hidden lg:block">
                       <p className="text-xs text-gray-500 font-medium">Welcome back</p>
-                      <p className="text-sm font-bold text-gray-900 -mt-0.5">{user.name?.split(' ')[0] || 'User'}</p>
+                      <p className="text-xs font-bold text-gray-800 -mt-0.5">{user.name?.split(' ')[0] || 'User'}</p>
                     </div>
-                    <svg className="w-4 h-4 text-gray-400 group-hover:text-primary-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    <svg className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="bg-white text-gray-700 border-2 border-gray-100 px-5 py-2 rounded-lg font-bold hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm text-sm"
+                    className="bg-white text-black border border-gray-300 px-4 py-1.5 rounded-xl font-semibold hover:bg-red-600 hover:text-white hover:border-gray-300 transition-all shadow-sm text-sm"
                   >
                     Logout
                   </button>
                 </>
               ) : (
-                <div className="hidden md:flex items-center gap-3">
-                  <Link to="/login" className="px-5 py-2.5 text-gray-700 hover:text-gray-900 font-medium text-sm transition-all duration-300 hover:bg-gray-50 rounded-lg transform hover:scale-105">
+                <div className="hidden md:flex items-center gap-2.5">
+                  <Link to="/login" className="px-4 py-2 text-gray-600 hover:text-gray-800 font-semibold text-sm transition-all duration-200 hover:bg-gray-50 rounded-xl">
                     Login
                   </Link>
-                  <Link to="/signup" className="bg-gray-900 text-white px-6 py-2.5 rounded-lg hover:bg-black transition-all duration-300 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-gray-900/30 font-medium text-sm transform hover:-translate-y-1 hover:scale-105">
+                  <Link to="/signup" className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-5 py-2 rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40 font-semibold text-sm">
                     Sign Up
                   </Link>
                 </div>
@@ -106,20 +115,20 @@ export const Navbar = () => {
             <div className="px-4 pt-2 pb-6 space-y-1">
               {user ? (
                 <>
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium">Dashboard</Link>
-                  <Link to="/rooms" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium">Find Rooms</Link>
-                  <Link to="/add-room" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium">List Room</Link>
-                  <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium">Contact</Link>
-                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium">Profile</Link>
-                  <button onClick={handleLogout} className="block w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium">Logout</button>
+                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium transition-all">Dashboard</Link>
+                  <Link to="/rooms" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium transition-all">Find Rooms</Link>
+                  <Link to="/add-room" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium transition-all">List Room</Link>
+                  <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium transition-all">Contact</Link>
+                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium transition-all">Profile</Link>
+                  <button onClick={handleLogout} className="block w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-all">Logout</button>
                 </>
               ) : (
                 <>
-                  <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium">Home</Link>
-                  <Link to="/rooms" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium">Find Rooms</Link>
-                  <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium">Contact</Link>
-                  <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium">Login</Link>
-                  <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium">Sign Up</Link>
+                  <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium transition-all">Home</Link>
+                  <Link to="/rooms" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium transition-all">Find Rooms</Link>
+                  <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium transition-all">Contact</Link>
+                  <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium transition-all">Login</Link>
+                  <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium transition-all">Sign Up</Link>
                 </>
               )}
             </div>

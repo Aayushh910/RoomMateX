@@ -1,14 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { GUJARAT_CITIES } from '../constants/cities';
+import { dashboardService } from '../services/dashboardService';
+import { userService } from '../services/userService';
+import { getImageUrl } from '../utils/imageUtils';
+import { ImageCropModal } from '../components/ui/ImageCropModal';
 
 export const ProfilePage = () => {
-    const { user, updateUser } = useAuth();
+    const { user, updateUser, setUser } = useAuth();
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
     const [activeTab, setActiveTab] = useState('personal');
     const [isEditing, setIsEditing] = useState(false);
+    const [listingsCount, setListingsCount] = useState(0);
+    const [wishlistCount, setWishlistCount] = useState(0);
+    const [isLoadingCounts, setIsLoadingCounts] = useState(true);
+    const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+    const [showCropModal, setShowCropModal] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
     
     const [twoFactor, setTwoFactor] = useState(false);
     const [notifications, setNotifications] = useState({
@@ -40,20 +51,49 @@ export const ProfilePage = () => {
     // Initialize form data from user context
     useEffect(() => {
         if (user) {
+            // Helper function to safely parse JSON
+            const safeJSONParse = (str, defaultValue = []) => {
+                try {
+                    return str ? JSON.parse(str) : defaultValue;
+                } catch (e) {
+                    return defaultValue;
+                }
+            };
+
             setFormData({
-                name: user.name || '',
+                name: user.full_name || '',
                 email: user.email || '',
-                phone: user.phone || '',
+                phone: user.phone_number || '',
                 city: user.city || '',
                 occupation: user.occupation || '',
-                about: user.about || '',
-                gender: user.gender || '',
+                about: user.bio || '',
+                gender: user.gender_preference || '',
                 age: user.age || '',
-                budgetMin: user.preferences?.budgetMin || '',
-                budgetMax: user.preferences?.budgetMax || '',
-                lifestyle: user.preferences?.lifestyle || [],
-                interests: user.preferences?.interests || []
+                budgetMin: user.budget_min || '',
+                budgetMax: user.budget_max || '',
+                lifestyle: safeJSONParse(user.lifestyle, []),
+                interests: safeJSONParse(user.interests, [])
             });
+        }
+    }, [user]);
+
+    // Fetch listings and wishlist counts
+    useEffect(() => {
+        const fetchCounts = async () => {
+            try {
+                setIsLoadingCounts(true);
+                const summary = await dashboardService.getSummary();
+                setListingsCount(summary.my_listings_count || 0);
+                setWishlistCount(summary.wishlist_count || 0);
+            } catch (error) {
+                console.error('Failed to fetch counts:', error);
+            } finally {
+                setIsLoadingCounts(false);
+            }
+        };
+
+        if (user) {
+            fetchCounts();
         }
     }, [user]);
 
@@ -73,28 +113,31 @@ export const ProfilePage = () => {
         });
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         // Construct the updates object
         const updates = {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            city: formData.city,
             occupation: formData.occupation,
-            about: formData.about,
-            gender: formData.gender,
-            age: formData.age,
-            preferences: {
-                budgetMin: formData.budgetMin,
-                budgetMax: formData.budgetMax,
-                lifestyle: formData.lifestyle,
-                interests: formData.interests
-            }
+            age: formData.age ? parseInt(formData.age) : null,
+            bio: formData.about,
+            city: formData.city,
+            phone_number: formData.phone,
+            // Preference fields
+            gender_preference: formData.gender || null,
+            budget_min: formData.budgetMin ? parseInt(formData.budgetMin) : null,
+            budget_max: formData.budgetMax ? parseInt(formData.budgetMax) : null,
+            lifestyle: JSON.stringify(formData.lifestyle || []),
+            interests: JSON.stringify(formData.interests || [])
         };
 
-        updateUser(updates);
-        setIsEditing(false);
-        // Optional: Show success toast
+        const result = await updateUser(updates);
+        
+        if (result.success) {
+            setIsEditing(false);
+            // Optional: Show success toast
+        } else {
+            // Show error
+            alert(result.error || 'Failed to update profile');
+        }
     };
 
     // Verification Handler
@@ -112,6 +155,66 @@ export const ProfilePage = () => {
         navigate('/verification?action=deleteAccount');
     };
 
+    // Profile Photo Upload Handler
+    const handlePhotoClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handlePhotoChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!validTypes.includes(file.type)) {
+            alert('Please upload a valid image file (JPG, JPEG, or PNG)');
+            return;
+        }
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Image size must be less than 5MB');
+            return;
+        }
+
+        // Read file and show crop modal
+        const reader = new FileReader();
+        reader.onload = () => {
+            setSelectedImage(reader.result);
+            setShowCropModal(true);
+        };
+        reader.readAsDataURL(file);
+        
+        // Reset file input
+        e.target.value = '';
+    };
+
+    const handleCropComplete = async (croppedBlob) => {
+        try {
+            setShowCropModal(false);
+            setIsUploadingPhoto(true);
+            
+            // Convert blob to file
+            const croppedFile = new File([croppedBlob], 'profile-photo.jpg', {
+                type: 'image/jpeg',
+            });
+            
+            const updatedUser = await userService.uploadProfilePhoto(croppedFile);
+            setUser(updatedUser);
+        } catch (error) {
+            console.error('Failed to upload photo:', error);
+            alert(error.response?.data?.detail || 'Failed to upload profile photo');
+        } finally {
+            setIsUploadingPhoto(false);
+            setSelectedImage(null);
+        }
+    };
+
+    const handleCropCancel = () => {
+        setShowCropModal(false);
+        setSelectedImage(null);
+    };
+
     const lifestyleOptions = ['Non-smoker', 'Early Riser', 'Night Owl', 'Pet Friendly', 'Vegetarian', 'Vegan', 'Clean', 'Social', 'Introvert'];
     const interestOptions = ['Reading', 'Gaming', 'Music', 'Cooking', 'Travel', 'Fitness', 'Art', 'Movies', 'Tech', 'Outdoors'];
 
@@ -125,30 +228,44 @@ export const ProfilePage = () => {
                     {/* Left Sidebar: Profile Card */}
                     <div className="md:w-1/3 space-y-6">
                         <div className="glass-card rounded-2xl p-6 text-center sticky top-32">
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/jpeg,image/jpg,image/png"
+                                onChange={handlePhotoChange}
+                                className="hidden"
+                            />
                             <div className="relative inline-block mb-4">
-                                <div className="w-32 h-32 rounded-full bg-gray-200 border-4 border-white shadow-lg mx-auto overflow-hidden relative group">
-                                    {user?.profilePhoto ? (
-                                        <img src={user.profilePhoto} alt={user.name} className="w-full h-full object-cover" />
+                                <div 
+                                    onClick={handlePhotoClick}
+                                    className="w-32 h-32 rounded-full bg-gray-200 border-4 border-white shadow-lg mx-auto overflow-hidden relative group cursor-pointer"
+                                >
+                                    {isUploadingPhoto ? (
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                                        </div>
+                                    ) : user?.profile_photo ? (
+                                        <img src={getImageUrl(user.profile_photo)} alt={user.full_name} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-100 to-indigo-100 text-primary-600 text-4xl font-bold">
-                                            {user?.name?.[0]?.toUpperCase() || 'U'}
+                                            {user?.full_name?.[0]?.toUpperCase() || 'U'}
                                         </div>
                                     )}
-                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center alpha-0 group-hover:opacity-100 opacity-0 transition-opacity cursor-pointer">
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                                     </div>
                                 </div>
-                                {user?.verified && (
+                                {user?.is_verified && (
                                     <div className="absolute bottom-1 right-1/2 translate-x-12 bg-blue-500 text-white p-1.5 rounded-full shadow-md border-2 border-white" title="Verified User">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                                     </div>
                                 )}
                             </div>
 
-                            <h2 className="text-2xl font-bold text-gray-900 mb-1">{user?.name}</h2>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-1">{user?.full_name}</h2>
                             <p className="text-gray-500 mb-4">{user?.city || 'No Location Set'}</p>
 
-                            {!user?.verified ? (
+                            {!user?.is_verified ? (
                                 <button onClick={handleVerifyClick} className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all text-sm mb-4">
                                     Verify Identity
                                 </button>
@@ -158,22 +275,20 @@ export const ProfilePage = () => {
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         Identity Verified
                                     </div>
-                                    <button
-                                        onClick={() => updateUser({ verified: false })}
-                                        className="text-xs text-gray-400 hover:text-red-500 hover:underline transition-colors"
-                                    >
-                                         Reset Verification
-                                    </button>
                                 </div>
                             )}
 
                             <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-6">
                                 <div className="text-center">
-                                    <span className="block font-bold text-xl text-gray-900">{user?.listings?.length || 0}</span>
+                                    <span className="block font-bold text-xl text-gray-900">
+                                        {isLoadingCounts ? '...' : listingsCount}
+                                    </span>
                                     <span className="text-xs text-gray-500 font-medium uppercase">Listings</span>
                                 </div>
                                 <div className="text-center">
-                                    <span className="block font-bold text-xl text-gray-900">{user?.wishlist?.length || 0}</span>
+                                    <span className="block font-bold text-xl text-gray-900">
+                                        {isLoadingCounts ? '...' : wishlistCount}
+                                    </span>
                                     <span className="text-xs text-gray-500 font-medium uppercase">Wishlisted</span>
                                 </div>
                             </div>
@@ -421,6 +536,15 @@ export const ProfilePage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Image Crop Modal */}
+            {showCropModal && selectedImage && (
+                <ImageCropModal
+                    image={selectedImage}
+                    onCropComplete={handleCropComplete}
+                    onCancel={handleCropCancel}
+                />
+            )}
         </div>
     );
 };

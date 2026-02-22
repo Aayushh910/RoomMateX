@@ -310,18 +310,18 @@ export const cities=[
 ];
 
 export const amenitiesList = [
-    'WiFi',
-    'AC',
-    'Parking',
-    'Security',
-    'Gym',
-    'Swimming Pool',
-    'Power Backup',
-    'Elevator',
-    'Meals',
-    'Laundry',
-    'Water Supply',
-    'Playground',
+    'wifi',
+    'ac',
+    'parking',
+    'security',
+    'gym',
+    'swimming_pool',
+    'power_backup',
+    'elevator',
+    'meals',
+    'laundry',
+    'water_supply',
+    'playground',
 ];
 
 

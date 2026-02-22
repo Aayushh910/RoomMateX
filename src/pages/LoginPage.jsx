@@ -4,8 +4,10 @@ import { useAuth } from '../context/AuthContext';
 
 export const LoginPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [loginAs, setLoginAs] = useState('user');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -48,7 +50,7 @@ export const LoginPage = () => {
     setOtpSent(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -57,40 +59,34 @@ export const LoginPage = () => {
       return;
     }
 
-    // Demo login - Check for admin and user credentials
-    if (formData.email === 'admin@test.com' && formData.password === 'admin123') {
-      login({
-        id: 'admin1',
-        name: 'Admin User',
-        email: formData.email,
-        role: 'admin',
-        phone: '+91 98765 43200',
-        city: 'Pune',
-        verified: true,
-        profilePhoto: null,
-        listings: [],
-        wishlist: [],
-        viewedRooms: [],
-      });
-      navigate('/admin');
-    } else if (formData.email === 'user@test.com' && formData.password === 'password') {
-      // Regular user login
-      login({
-        id: 'user' + Date.now(),
-        name: 'Demo User',
-        email: formData.email,
-        role: 'user',
-        phone: '+91 98765 43210',
-        city: 'Pune',
-        verified: true,
-        profilePhoto: null,
-        listings: [],
-        wishlist: [],
-        viewedRooms: [],
-      });
-      navigate('/dashboard');
-    } else {
-      setError('Invalid credentials');
+    setLoading(true);
+
+    try {
+      if (loginAs === 'admin') {
+        // Admin login - separate from user login
+        const { adminService } = await import('../services/adminService');
+        const result = await adminService.login(formData.email, formData.password);
+        
+        setLoading(false);
+        
+        if (result) {
+          navigate('/admin-dashboard');
+        }
+      } else {
+        // User login - existing logic
+        const result = await login(formData);
+        
+        setLoading(false);
+        
+        if (result.success) {
+          navigate('/dashboard');
+        } else {
+          setError(result.error || 'Login failed');
+        }
+      }
+    } catch (error) {
+      setLoading(false);
+      setError(error.response?.data?.detail || 'Login failed. Please check your credentials.');
     }
   };
 
@@ -125,6 +121,34 @@ export const LoginPage = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="animate-slide-up delay-150">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Login As</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setLoginAs('user')}
+                  className={`py-3 px-4 rounded-xl font-semibold transition-all border-2 ${
+                    loginAs === 'user'
+                      ? 'bg-primary-50 border-primary-500 text-primary-700'
+                      : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  User
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLoginAs('admin')}
+                  className={`py-3 px-4 rounded-xl font-semibold transition-all border-2 ${
+                    loginAs === 'admin'
+                      ? 'bg-primary-50 border-primary-500 text-primary-700'
+                      : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  Admin
+                </button>
+              </div>
+            </div>
+
             <div className="animate-slide-up delay-200">
               <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
               <div className="relative group">
@@ -180,8 +204,12 @@ export const LoginPage = () => {
               </div>
             </div>
 
-            <button type="submit" className="w-full bg-primary-600 text-white py-3 rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-600/20 active:scale-[0.98] animate-slide-up delay-400">
-              Sign In
+            <button 
+              type="submit" 
+              disabled={loading}
+              className={`w-full bg-primary-600 text-white py-3 rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-600/20 active:scale-[0.98] animate-slide-up delay-400 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 
@@ -191,7 +219,7 @@ export const LoginPage = () => {
           </p>
 
 
-
+        {/*
           <div className="mt-6 p-4 bg-gray-50 rounded-2xl border border-gray-100 animate-slide-up delay-700">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-1.5 h-6 bg-blue-500 rounded-full"></div>
@@ -200,11 +228,11 @@ export const LoginPage = () => {
             <div className="space-y-1 text-sm text-gray-600">
               <p>User: <span className="font-mono text-gray-900">user@test.com</span> / <span className="font-mono text-gray-900">password</span></p>
               <p>Admin: <span className="font-mono text-gray-900">admin@test.com</span> / <span className="font-mono text-gray-900">admin123</span></p>
-            </div>
-          </div>
+            </div> 
+          </div>*/}
         </div>
       </div>
-
+            
       {/* Forgot Password Modal */}
       {showForgotPassword && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">

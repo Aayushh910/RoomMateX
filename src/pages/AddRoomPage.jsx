@@ -1,26 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { amenitiesList } from '../data/mockData';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { GUJARAT_CITIES } from '../constants/cities';
+import { propertyService } from '../services/propertyService';
 
 export const AddRoomPage = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [step, setStep] = useState(1);
     const [showVerificationWarning, setShowVerificationWarning] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
-        propertyType: 'Apartment',
-
+        propertyType: 'apartment',
         city: '',
         area: '',
         rent: '',
         deposit: '',
         availableFrom: '',
-        photos: [],
-        genderPreference: 'Any',
+        photoFiles: [],
+        genderPreference: 'any',
         amenities: [],
         rules: '',
         description: ''
@@ -41,24 +41,90 @@ export const AddRoomPage = () => {
     };
 
     const handlePhotoUpload = (e) => {
-        // Mock photo upload
         const files = Array.from(e.target.files);
-        const newPhotos = files.map(file => URL.createObjectURL(file));
-        setFormData(prev => ({ ...prev, photos: [...prev.photos, ...newPhotos] }));
+        if (files.length + formData.photoFiles.length > 5) {
+            alert('Maximum 5 images allowed');
+            return;
+        }
+        setFormData(prev => ({ ...prev, photoFiles: [...prev.photoFiles, ...files] }));
     };
 
-    const nextStep = () => setStep(prev => prev + 1);
+    const removePhoto = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            photoFiles: prev.photoFiles.filter((_, i) => i !== index)
+        }));
+    };
+
+    const nextStep = () => {
+        // Validate current step
+        if (step === 1) {
+            if (!formData.title || !formData.propertyType || !formData.city || !formData.area) {
+                alert('Please fill all required fields');
+                return;
+            }
+        } else if (step === 2) {
+            if (!formData.rent || !formData.deposit || !formData.availableFrom) {
+                alert('Please fill all required fields');
+                return;
+            }
+            if (formData.photoFiles.length === 0) {
+                alert('Please upload at least one photo');
+                return;
+            }
+        }
+        setStep(prev => prev + 1);
+    };
+
     const prevStep = () => setStep(prev => prev - 1);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Simulate API call
-        alert('Room listed successfully!');
-        navigate('/dashboard');
+        
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        setSubmitting(true);
+        
+        try {
+            // Convert rules string to array
+            const rulesArray = formData.rules
+                .split('\n')
+                .map(rule => rule.trim())
+                .filter(rule => rule.length > 0);
+
+            // Prepare property data
+            const propertyData = {
+                title: formData.title,
+                propertyType: formData.propertyType,
+                description: formData.description,
+                rent: parseInt(formData.rent),
+                deposit: parseInt(formData.deposit),
+                city: formData.city,
+                area: formData.area,
+                availableFrom: formData.availableFrom,
+                preferredTenant: formData.genderPreference,
+                amenities: formData.amenities,
+                rules: rulesArray,
+                images: formData.photoFiles,
+            };
+
+            await propertyService.createProperty(propertyData);
+            alert('Property listed successfully!');
+            navigate('/dashboard');
+        } catch (err) {
+            console.error('Failed to create property:', err);
+            const errorMessage = err.response?.data?.detail || err.message || 'Failed to create property. Please try again.';
+            alert(errorMessage);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     useEffect(() => {
-        if (!user?.verified) {
+        if (!user?.is_verified) {
             setShowVerificationWarning(true);
         }
     }, [user]);
@@ -112,13 +178,12 @@ export const AddRoomPage = () => {
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Property Type</label>
                                             <select name="propertyType" value={formData.propertyType} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-white">
-                                                <option>Apartment</option>
-                                                <option>Independent House</option>
-                                                <option>Villa</option>
-                                                <option>PG</option>
+                                                <option value="apartment">Apartment</option>
+                                                <option value="house">Independent House</option>
+                                                <option value="villa">Villa</option>
+                                                <option value="pg">PG</option>
                                             </select>
                                         </div>
-
                                     </div>
                                     <div className="grid grid-cols-2 gap-6">
                                         <div>
@@ -157,18 +222,33 @@ export const AddRoomPage = () => {
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Photos</label>
                                         <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer relative">
-                                            <input type="file" multiple onChange={handlePhotoUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                            <input 
+                                                type="file" 
+                                                multiple 
+                                                accept="image/*"
+                                                onChange={handlePhotoUpload} 
+                                                className="absolute inset-0 opacity-0 cursor-pointer" 
+                                            />
                                             <div className="text-gray-500">
                                                 <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                                 <p className="font-medium">Click to upload photos</p>
-                                                <p className="text-xs mt-1">or drag and drop here</p>
+                                                <p className="text-xs mt-1">or drag and drop here (Max 5 images)</p>
                                             </div>
                                         </div>
-                                        {formData.photos.length > 0 && (
+                                        {formData.photoFiles.length > 0 && (
                                             <div className="flex gap-4 mt-4 overflow-x-auto pb-2">
-                                                {formData.photos.map((photo, idx) => (
+                                                {formData.photoFiles.map((file, idx) => (
                                                     <div key={idx} className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200">
-                                                        <img src={photo} alt="" className="w-full h-full object-cover" />
+                                                        <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removePhoto(idx)}
+                                                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                                        >
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </button>
                                                     </div>
                                                 ))}
                                             </div>
@@ -181,11 +261,11 @@ export const AddRoomPage = () => {
                                 <div className="space-y-6 animate-fade-in">
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Preferred Tenant</label>
-                                        <div className="flex gap-4">
-                                            {['Any', 'Male', 'Female', 'Family', 'Student'].map((p) => (
+                                        <div className="flex gap-4 flex-wrap">
+                                            {['any', 'male', 'female', 'family'].map((p) => (
                                                 <label key={p} className={`cursor-pointer px-4 py-2 rounded-lg border-2 font-medium transition-all ${formData.genderPreference === p ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
                                                     <input type="radio" name="genderPreference" value={p} checked={formData.genderPreference === p} onChange={handleChange} className="hidden" />
-                                                    {p}
+                                                    {p.charAt(0).toUpperCase() + p.slice(1)}
                                                 </label>
                                             ))}
                                         </div>
@@ -193,7 +273,7 @@ export const AddRoomPage = () => {
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-3">Amenities</label>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                            {amenitiesList.map((amenity) => (
+                                            {['wifi', 'ac', 'parking', 'security', 'gym', 'swimming_pool', 'power_backup', 'elevator', 'meals', 'laundry', 'water_supply', 'playground'].map((amenity) => (
                                                 <label key={amenity} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
                                                     <input
                                                         type="checkbox"
@@ -201,10 +281,21 @@ export const AddRoomPage = () => {
                                                         onChange={() => handleAmenityToggle(amenity)}
                                                         className="w-5 h-5 rounded text-primary-600 focus:ring-primary-500 border-gray-300"
                                                     />
-                                                    <span className="text-gray-700 font-medium">{amenity}</span>
+                                                    <span className="text-gray-700 font-medium capitalize">{amenity.replace('_', ' ')}</span>
                                                 </label>
                                             ))}
                                         </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">House Rules (One per line)</label>
+                                        <textarea
+                                            name="rules"
+                                            value={formData.rules}
+                                            onChange={handleChange}
+                                            rows="4"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all resize-none"
+                                            placeholder="No smoking&#10;No pets&#10;Quiet hours after 10 PM"
+                                        ></textarea>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
@@ -262,12 +353,20 @@ export const AddRoomPage = () => {
                                 )}
 
                                 {step < 4 ? (
-                                    <button type="button" onClick={nextStep} className="px-6 py-2.5 rounded-xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-600/20 hover:shadow-primary-600/40 hover:-translate-y-0.5">
+                                    <button 
+                                        type="button" 
+                                        onClick={nextStep} 
+                                        className="px-6 py-2.5 rounded-xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-600/20 hover:shadow-primary-600/40 hover:-translate-y-0.5"
+                                    >
                                         Next Step
                                     </button>
                                 ) : (
-                                    <button type="submit" className="px-6 py-2.5 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 hover:shadow-green-600/40 hover:-translate-y-0.5">
-                                        Confirm & Publish
+                                    <button 
+                                        type="submit" 
+                                        className="px-6 py-2.5 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 hover:shadow-green-600/40 hover:-translate-y-0.5 disabled:opacity-50"
+                                        disabled={submitting}
+                                    >
+                                        {submitting ? 'Publishing...' : 'Confirm & Publish'}
                                     </button>
                                 )}
                             </div>

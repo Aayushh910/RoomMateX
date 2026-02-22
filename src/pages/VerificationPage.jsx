@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/Navbar';
+import { authService } from '../services/authService';
+import { userService } from '../services/userService';
 
 export const VerificationPage = () => {
-    const { user, updateUser } = useAuth();
+    const { user, verifyOTP, sendOTP, refreshUser } = useAuth();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const action = searchParams.get('action') || 'verify';
@@ -12,33 +14,101 @@ export const VerificationPage = () => {
     const [verificationType, setVerificationType] = useState('');
     const [otp, setOtp] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const [passwordData, setPasswordData] = useState({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
     });
 
-    const handleSendOtp = (type) => {
+    const handleSendOtp = async (type) => {
         setVerificationType(type);
-        setStep(2);
+        setLoading(true);
+        setError('');
+        
+        try {
+            if (action === 'verify') {
+                const result = await sendOTP('verification');
+                if (result.success) {
+                    setStep(2);
+                } else {
+                    setError(result.error || 'Failed to send OTP');
+                }
+            } else if (action === 'changePassword') {
+                // Send OTP for password change
+                const result = await sendOTP('password_change');
+                if (result.success) {
+                    setStep(2);
+                } else {
+                    setError(result.error || 'Failed to send OTP');
+                }
+            } else if (action === 'deleteAccount') {
+                // Send OTP for account deletion
+                const result = await sendOTP('account_delete');
+                if (result.success) {
+                    setStep(2);
+                } else {
+                    setError(result.error || 'Failed to send OTP');
+                }
+            }
+        } catch (err) {
+            setError('Failed to send OTP. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleVerifyOtp = () => {
-        if (otp === '1234') {
-            setError('');
-            setStep(3);
-            setTimeout(() => {
-                if (action === 'verify') {
-                    updateUser({ verified: true });
-                    navigate('/profile');
-                } else if (action === 'changePassword') {
-                    setStep(4);
-                } else if (action === 'deleteAccount') {
-                    navigate('/profile');
+    const handleVerifyOtp = async () => {
+        if (!otp || otp.length < 4) {
+            setError('Please enter a valid OTP');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+
+        try {
+            if (action === 'verify') {
+                const result = await verifyOTP(otp, 'verification');
+                if (result.success) {
+                    setStep(3);
+                    setTimeout(() => {
+                        navigate('/profile');
+                    }, 2000);
+                } else {
+                    setError(result.error || 'Invalid OTP');
                 }
-            }, 2000);
-        } else {
-            setError('Invalid OTP. Please use 1234.');
+            } else if (action === 'changePassword') {
+                // Verify OTP for password change, then move to password form
+                const result = await verifyOTP(otp, 'password_change');
+                if (result.success) {
+                    setStep(4); // Move to password change form
+                } else {
+                    setError(result.error || 'Invalid OTP');
+                }
+            } else if (action === 'deleteAccount') {
+                // Verify OTP for account deletion, then delete account
+                const result = await verifyOTP(otp, 'account_delete');
+                if (result.success) {
+                    // Delete account
+                    try {
+                        await userService.deleteAccount();
+                        setStep(3);
+                        setTimeout(() => {
+                            authService.logout();
+                            navigate('/');
+                        }, 2000);
+                    } catch (err) {
+                        setError(err.response?.data?.detail || 'Failed to delete account');
+                    }
+                } else {
+                    setError(result.error || 'Invalid OTP');
+                }
+            }
+        } catch (err) {
+            setError('Verification failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -47,7 +117,7 @@ export const VerificationPage = () => {
         setPasswordData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleChangePassword = () => {
+    const handleChangePassword = async () => {
         if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
             setError('Please fill all fields');
             return;
@@ -60,11 +130,21 @@ export const VerificationPage = () => {
             setError('Password must be at least 6 characters');
             return;
         }
+
+        setLoading(true);
         setError('');
-        setStep(5);
-        setTimeout(() => {
-            navigate('/profile');
-        }, 2000);
+
+        try {
+            await authService.changePassword(passwordData.currentPassword, passwordData.newPassword);
+            setStep(5);
+            setTimeout(() => {
+                navigate('/profile');
+            }, 2000);
+        } catch (err) {
+            setError(err.response?.data?.detail || 'Failed to change password');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const getTitle = () => {
@@ -233,18 +313,19 @@ export const VerificationPage = () => {
                                     maxLength={4}
                                 />
                                 {error && <p className="text-sm text-red-600 mt-2 text-center">{error}</p>}
-                                <p className="text-xs text-center text-gray-500 mt-2">Demo OTP: <strong>1234</strong></p>
+                                <p className="text-xs text-center text-gray-500 mt-2"></p>
                             </div>
 
                             <button
                                 onClick={handleVerifyOtp}
+                                disabled={loading}
                                 className={`w-full py-3 rounded-xl font-bold transition-colors shadow-lg text-white ${
                                     action === 'verify' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20' :
                                     action === 'changePassword' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' :
                                     'bg-red-600 hover:bg-red-700 shadow-red-600/20'
-                                }`}
+                                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                {action === 'deleteAccount' ? 'Verify & Delete Account' : 'Verify & Complete'}
+                                {loading ? 'Verifying...' : (action === 'deleteAccount' ? 'Verify & Delete Account' : 'Verify & Complete')}
                             </button>
 
                             <button

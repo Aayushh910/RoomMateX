@@ -4,20 +4,34 @@ import { Shield, Users, Star, MapPin, CheckCircle, Home } from 'lucide-react';
 
 export const LandingPage = () => {
   const [typedText, setTypedText] = useState('');
-  const fullText = 'Find Your Perfect Room & Roommate   ';
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const words = ['Perfect Room', 'Vibe Roomie', 'Loyal Tenant', 'Room & Roommate'];
 
   useEffect(() => {
-    let index = 0;
-    const timer = setInterval(() => {
-      if (index <= fullText.length) {
-        setTypedText(fullText.slice(0, index));
-        index++;
+    const currentWord = words[currentIndex];
+    const typingSpeed = isDeleting ? 50 : 100;
+    const pauseTime = 2000;
+
+    const timer = setTimeout(() => {
+      if (!isDeleting) {
+        if (typedText.length < currentWord.length) {
+          setTypedText(currentWord.slice(0, typedText.length + 1));
+        } else {
+          setTimeout(() => setIsDeleting(true), pauseTime);
+        }
       } else {
-        clearInterval(timer);
+        if (typedText.length > 0) {
+          setTypedText(currentWord.slice(0, typedText.length - 1));
+        } else {
+          setIsDeleting(false);
+          setCurrentIndex((prev) => (prev + 1) % words.length);
+        }
       }
-    }, 80);
-    return () => clearInterval(timer);
-  }, []);
+    }, typingSpeed);
+
+    return () => clearTimeout(timer);
+  }, [typedText, isDeleting, currentIndex]);
 
   const handleSmoothScroll = (e, targetId) => {
     e.preventDefault();
@@ -59,46 +73,46 @@ export const LandingPage = () => {
         <div className="relative z-10">
 
           {/* Floating Navbar */}
-          <div className="fixed top-0 left-0 right-0 z-50 pt-6 px-4">
+          <div className="fixed top-0 left-0 right-0 z-50 pt-4 px-4">
             <nav className="max-w-7xl mx-auto bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-blue-900/5 dark:shadow-none border border-white/50 dark:border-slate-800 rounded-2xl transition-all duration-300">
               <div className="px-6 md:px-8">
-                <div className="flex justify-between h-20 items-center">
+                <div className="flex justify-between h-14 items-center">
                   {/* Logo */}
-                  <Link to="/" className="flex items-center gap-3 group">
-                    <div className="w-9 h-9 rounded-xl bg-gray-900 dark:bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 transform group-hover:scale-110 transition-all duration-300 group-hover:shadow-indigo-500/40">
-                      <svg className="w-5 h-5 text-white transform group-hover:rotate-12 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <Link to="/" className="flex items-center gap-2.5 group">
+                    <div className="w-8 h-8 rounded-xl bg-gray-900 dark:bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 transform group-hover:scale-110 transition-all duration-300 group-hover:shadow-indigo-500/40">
+                      <svg className="w-4 h-4 text-white transform group-hover:rotate-12 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                       </svg>
                     </div>
-                    <span className="text-xl font-bold text-gray-900 dark:text-white tracking-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-all duration-300">
+                    <span className="text-lg font-bold text-gray-900 dark:text-white tracking-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-all duration-300">
                       RoomMateX
                     </span>
                   </Link>
 
                   {/* Centered Links */}
-                  <div className="hidden md:flex items-center gap-8">
-                    <a href="#home" onClick={(e) => handleSmoothScroll(e, 'home')} className="text-gray-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors text-sm cursor-pointer">
+                  <div className="hidden md:flex items-center gap-6">
+                    <a href="#home" onClick={(e) => handleSmoothScroll(e, 'home')} className="text-gray-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-semibold transition-colors text-sm cursor-pointer">
                       Home
                     </a>
-                    <a href="#features" onClick={(e) => handleSmoothScroll(e, 'features')} className="text-gray-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors text-sm cursor-pointer">
+                    <a href="#features" onClick={(e) => handleSmoothScroll(e, 'features')} className="text-gray-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-semibold transition-colors text-sm cursor-pointer">
                       Features
                     </a>
 
-                    <a href="#testimonials" onClick={(e) => handleSmoothScroll(e, 'testimonials')} className="text-gray-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors text-sm cursor-pointer">
+                    <a href="#testimonials" onClick={(e) => handleSmoothScroll(e, 'testimonials')} className="text-gray-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-semibold transition-colors text-sm cursor-pointer">
                       Reviews
                     </a>
-                    <a href="#contact" onClick={(e) => handleSmoothScroll(e, 'contact')} className="text-gray-600 hover:text-primary-600 font-medium transition-colors text-sm cursor-pointer">
+                    <a href="#contact" onClick={(e) => handleSmoothScroll(e, 'contact')} className="text-gray-700 hover:text-primary-600 font-semibold transition-colors text-sm cursor-pointer">
                       Contact
                     </a>
                   </div>
 
                   {/* Right Buttons */}
-                  <div className="flex items-center gap-3">
-                    <Link to="/login" className="hidden sm:inline-flex px-5 py-2.5 text-gray-700 hover:text-gray-900 font-medium text-sm transition-all duration-300 hover:bg-gray-50 rounded-lg transform hover:scale-105">
+                  <div className="flex items-center gap-2.5">
+                    <Link to="/login" className="hidden sm:inline-flex px-4 py-2 text-gray-700 hover:text-gray-900 font-semibold text-sm transition-all duration-300 hover:bg-gray-50 rounded-lg">
                       Login
                     </Link>
-                    <Link to="/signup" className="bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-black transition-all duration-300 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-gray-900/30 font-medium text-sm transform hover:-translate-y-1 hover:scale-105">
-                      Start Free Trial
+                    <Link to="/signup" className="bg-gray-900 text-white px-5 py-2 rounded-lg hover:bg-black transition-all duration-300 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-gray-900/30 font-semibold text-sm">
+                      Start Now
                     </Link>
                   </div>
                 </div>
@@ -107,7 +121,7 @@ export const LandingPage = () => {
           </div>
 
           {/* Hero Section */}
-          <section id="home" className="relative pt-44 pb-20 lg:pt-52 lg:pb-32 overflow-hidden">
+          <section id="home" className="relative pt-28 pb-12 lg:pt-32 lg:pb-16 overflow-hidden">
             {/* Decorative Background Elements */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full z-0 pointer-events-none overflow-hidden">
               <div className="absolute top-[10%] left-[10%] w-96 h-96 bg-blue-200/40 rounded-full mix-blend-multiply filter blur-[100px] animate-blob"></div>
@@ -126,14 +140,13 @@ export const LandingPage = () => {
                   <span className="pl-1">Rated 4.9/5 from verified users</span>
                 </div>
 
-                <h1 className="text-5xl lg:text-7xl font-bold text-gray-900 mb-8 leading-[1.1] tracking-tight">
-                  {typedText}
-                  <span className="text-primary-600">|</span>
+                <h1 className="text-5xl lg:text-7xl font-bold text-gray-900 mb-8 leading-[1.1] tracking-tight whitespace-nowrap">
+                  Find your <span className="text-primary-600">{typedText}<span className="animate-pulse">|</span></span>
                 </h1>
-                <p className="text-xl text-gray-500 mb-12 leading-relaxed max-w-2xl mx-auto">
+                <p className="text-xl text-gray-500 mb-8 leading-relaxed max-w-2xl mx-auto">
                   Discover verified rooms and trusted roommates in your city. Safe, simple, and stress-free housing solutions designed for modern living.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                   <Link
                     to="/signup"
                     className="w-full sm:w-auto bg-primary-600 text-white px-8 py-4 rounded-lg hover:bg-primary-700 transition-all duration-300 shadow-xl shadow-primary-600/20 hover:shadow-2xl hover:shadow-primary-600/40 font-semibold text-lg transform hover:scale-105 hover:-translate-y-1"
@@ -154,7 +167,7 @@ export const LandingPage = () => {
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-8">
                 {[
                   { number: '2,800+', label: 'Active Users' },
                   { number: '1,500+', label: 'Listed Rooms' },
@@ -339,20 +352,20 @@ export const LandingPage = () => {
           </section>
 
           {/* Footer */}
-          <footer id="contact" className="py-12 relative overflow-hidden mb-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-white/90 backdrop-blur-xl shadow-xl shadow-blue-900/5 border border-white/50 rounded-2xl p-8 md:p-12">
-              <div className="grid md:grid-cols-4 gap-12">
+          <footer id="contact" className="py-6 relative overflow-hidden mb-4">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-white/90 backdrop-blur-xl shadow-xl shadow-blue-900/5 border border-white/50 rounded-2xl p-6 md:p-8">
+              <div className="grid md:grid-cols-4 gap-8">
                 <div className="col-span-1">
-                  <h3 className="text-3xl font-bold mb-6 bg-gradient-to-r from-primary-600 to-indigo-600 bg-clip-text text-transparent">
+                  <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-primary-600 to-indigo-600 bg-clip-text text-transparent">
                     RoomMateX
                   </h3>
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className="text-gray-600 leading-relaxed text-sm">
                     Your trusted partner for finding the perfect room and compatible roommates. Making housing simple and safe.
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg mb-6 text-gray-900">Company</h4>
-                  <ul className="space-y-3 text-gray-600">
+                  <h4 className="font-bold text-base mb-4 text-gray-900">Company</h4>
+                  <ul className="space-y-2 text-gray-600 text-sm">
                     <li><a href="#" className="hover:text-primary-600 transition-colors">About Us</a></li>
                     <li><a href="#" className="hover:text-primary-600 transition-colors">Careers</a></li>
                     <li><a href="#" className="hover:text-primary-600 transition-colors">Blog</a></li>
@@ -360,8 +373,8 @@ export const LandingPage = () => {
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg mb-6 text-gray-900">Support</h4>
-                  <ul className="space-y-3 text-gray-600">
+                  <h4 className="font-bold text-base mb-4 text-gray-900">Support</h4>
+                  <ul className="space-y-2 text-gray-600 text-sm">
                     <li><a href="#" className="hover:text-primary-600 transition-colors">Help Center</a></li>
                     <li><a href="#" className="hover:text-primary-600 transition-colors">Safety Tips</a></li>
                     <li><Link to="/contact" className="hover:text-primary-600 transition-colors">Contact Us</Link></li>
@@ -369,21 +382,21 @@ export const LandingPage = () => {
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg mb-6 text-gray-900">Follow Us</h4>
-                  <div className="flex gap-4">
+                  <h4 className="font-bold text-base mb-4 text-gray-900">Follow Us</h4>
+                  <div className="flex gap-3">
                     {/* Social Icons */}
-                    <a href="#" className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all shadow-sm">
+                    <a href="#" className="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all shadow-sm">
                       <span className="sr-only">Twitter</span>
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" /></svg>
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" /></svg>
                     </a>
-                    <a href="#" className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all shadow-sm">
+                    <a href="#" className="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all shadow-sm">
                       <span className="sr-only">LinkedIn</span>
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clipRule="evenodd" /></svg>
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clipRule="evenodd" /></svg>
                     </a>
                   </div>
                 </div>
               </div>
-              <div className="border-t border-gray-100 mt-12 pt-8 text-center text-gray-500 text-sm">
+              <div className="border-t border-gray-100 mt-6 pt-4 text-center text-gray-500 text-sm">
                 <p>&copy; 2026 RoomMateX. All rights reserved.</p>
               </div>
             </div>

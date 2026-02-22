@@ -15,10 +15,11 @@ export const SignupPage = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -37,8 +38,24 @@ export const SignupPage = () => {
       return;
     }
 
-    signup(formData);
-    navigate('/dashboard');
+    setLoading(true);
+
+    const result = await signup({
+      fullName: formData.name,
+      email: formData.email,
+      password: formData.password,
+      phone: formData.phone,
+      city: formData.city,
+      role: formData.role === 'Room Seeker' ? 'room_seeker' : 'room_owner',
+    });
+
+    setLoading(false);
+
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setError(result.error || 'Registration failed');
+    }
   };
 
   return (
@@ -257,8 +274,12 @@ export const SignupPage = () => {
               </span>
             </label>
 
-            <button type="submit" className="w-full bg-primary-600 text-white py-2.5 rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-600/20 active:scale-[0.98] animate-slide-up delay-600">
-              Create Account
+            <button 
+              type="submit" 
+              disabled={loading}
+              className={`w-full bg-primary-600 text-white py-2.5 rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-600/20 active:scale-[0.98] animate-slide-up delay-600 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 
