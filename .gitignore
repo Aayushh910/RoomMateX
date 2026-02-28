@@ -57,6 +57,4 @@ uploads/
 # Project specific ignores
 # ========================
 alembic
-dependencies
-services
 alembic.ini
