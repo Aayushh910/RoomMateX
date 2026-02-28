@@ -132,6 +132,13 @@ class RequestStatus(str, enum.Enum):
     rejected = "rejected"
 
 
+class ReportStatus(str, enum.Enum):
+    """Report status enum"""
+    pending = "pending"
+    fixed = "fixed"
+    rejected = "rejected"
+
+
 class ContactRequest(Base):
     __tablename__ = "contact_requests"
 
@@ -156,7 +163,10 @@ class Report(Base):
     property_id = Column(UUID(as_uuid=True), ForeignKey("properties.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     reason = Column(Text, nullable=False)
+    status = Column(SQLEnum(ReportStatus), nullable=False, default=ReportStatus.pending)
+    admin_notice = Column(Text, nullable=True)  # Notice from admin to user
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
     # Relationships
     property = relationship("Property", back_populates="reports")

@@ -15,6 +15,61 @@ from app.models.property import Property, Review, Wishlist
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
+# OPTIONS handler for CORS preflight
+@router.options("/login")
+async def options_admin_login():
+    """Handle CORS preflight for admin login"""
+    return {}
+
+
+@router.options("/verify")
+async def options_verify():
+    """Handle CORS preflight for verify"""
+    return {}
+
+
+@router.options("/stats")
+async def options_stats():
+    """Handle CORS preflight for stats"""
+    return {}
+
+
+@router.options("/analytics/overview")
+async def options_analytics():
+    """Handle CORS preflight for analytics"""
+    return {}
+
+
+@router.options("/users")
+async def options_users():
+    """Handle CORS preflight for users"""
+    return {}
+
+
+@router.options("/properties")
+async def options_properties():
+    """Handle CORS preflight for properties"""
+    return {}
+
+
+@router.options("/reports")
+async def options_reports():
+    """Handle CORS preflight for reports"""
+    return {}
+
+
+@router.options("/contact-requests")
+async def options_contacts():
+    """Handle CORS preflight for contacts"""
+    return {}
+
+
+@router.options("/reports/{report_id}/status")
+async def options_report_status():
+    """Handle CORS preflight for report status"""
+    return {}
+
+
 # Request/Response Models
 class AdminLoginRequest(BaseModel):
     email: EmailStr
@@ -266,16 +321,55 @@ def get_all_users(
     admin: dict = Depends(get_current_admin),
     db: Session = Depends(get_db),
     page: int = 1,
-    page_size: int = 20
+    page_size: int = 20,
+    search: str = None,
+    role: str = None,
+    is_verified: bool = None,
+    city: str = None
 ):
     """
-    Get all users with pagination.
+    Get all users with pagination and filters.
     Protected route - requires admin authentication.
     """
     skip = (page - 1) * page_size
     
-    users = db.query(User).offset(skip).limit(page_size).all()
-    total = db.query(User).count()
+    # Build query with filters
+    query = db.query(User)
+    
+    if search:
+        query = query.filter(
+            (User.full_name.ilike(f"%{search}%")) | 
+            (User.email.ilike(f"%{search}%")) |
+            (User.phone_number.ilike(f"%{search}%"))
+        )
+    
+    if role:
+        query = query.filter(User.role == role)
+    
+    if is_verified is not None:
+        query = query.filter(User.is_verified == is_verified)
+    
+    if city:
+        query = query.filter(User.city.ilike(f"%{city}%"))
+    
+    total = query.count()
+    users_query = query.offset(skip).limit(page_size).all()
+    
+    # Convert users to dictionaries
+    users = []
+    for user in users_query:
+        users.append({
+            "id": str(user.id),
+            "full_name": user.full_name,
+            "email": user.email,
+            "phone_number": user.phone_number,
+            "city": user.city,
+            "role": user.role.value if hasattr(user.role, 'value') else str(user.role),
+            "is_verified": user.is_verified,
+            "is_active": user.is_active,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "profile_photo": user.profile_photo
+        })
     
     return {
         "users": users,
@@ -291,16 +385,63 @@ def get_all_properties(
     admin: dict = Depends(get_current_admin),
     db: Session = Depends(get_db),
     page: int = 1,
-    page_size: int = 20
+    page_size: int = 20,
+    search: str = None,
+    city: str = None,
+    property_type: str = None,
+    is_active: bool = None,
+    min_rent: int = None,
+    max_rent: int = None
 ):
     """
-    Get all properties with pagination.
+    Get all properties with pagination and filters.
     Protected route - requires admin authentication.
     """
     skip = (page - 1) * page_size
     
-    properties = db.query(Property).offset(skip).limit(page_size).all()
-    total = db.query(Property).count()
+    # Build query with filters
+    query = db.query(Property)
+    
+    if search:
+        query = query.filter(
+            (Property.property_title.ilike(f"%{search}%")) | 
+            (Property.area_locality.ilike(f"%{search}%"))
+        )
+    
+    if city:
+        query = query.filter(Property.city.ilike(f"%{city}%"))
+    
+    if property_type:
+        query = query.filter(Property.property_type == property_type)
+    
+    if is_active is not None:
+        query = query.filter(Property.is_active == is_active)
+    
+    if min_rent is not None:
+        query = query.filter(Property.monthly_rent >= min_rent)
+    
+    if max_rent is not None:
+        query = query.filter(Property.monthly_rent <= max_rent)
+    
+    total = query.count()
+    properties_query = query.offset(skip).limit(page_size).all()
+    
+    # Convert properties to dictionaries
+    properties = []
+    for prop in properties_query:
+        properties.append({
+            "id": str(prop.id),
+            "property_title": prop.property_title,
+            "property_type": prop.property_type.value if hasattr(prop.property_type, 'value') else str(prop.property_type),
+            "city": prop.city,
+            "area_locality": prop.area_locality,
+            "monthly_rent": prop.monthly_rent,
+            "deposit": prop.deposit,
+            "is_active": prop.is_active,
+            "available_from": prop.available_from.isoformat() if prop.available_from else None,
+            "created_at": prop.created_at.isoformat() if prop.created_at else None,
+            "owner_id": str(prop.owner_id)
+        })
     
     return {
         "properties": properties,
@@ -309,3 +450,285 @@ def get_all_properties(
         "page_size": page_size,
         "total_pages": (total + page_size - 1) // page_size
     }
+
+
+@router.get("/reports", response_model=dict)
+def get_all_reports(
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+    page: int = 1,
+    page_size: int = 20
+):
+    """
+    Get all property reports with pagination.
+    Protected route - requires admin authentication.
+    """
+    from app.models.property import Report
+    
+    skip = (page - 1) * page_size
+    
+    reports_query = db.query(Report).offset(skip).limit(page_size).all()
+    total = db.query(Report).count()
+    
+    # Convert reports to dictionaries
+    reports = []
+    for report in reports_query:
+        # Get property and user details
+        property_data = db.query(Property).filter(Property.id == report.property_id).first()
+        user_data = db.query(User).filter(User.id == report.user_id).first()
+        
+        reports.append({
+            "id": str(report.id),
+            "property_id": str(report.property_id),
+            "property_title": property_data.property_title if property_data else "Unknown",
+            "user_id": str(report.user_id),
+            "user_name": user_data.full_name if user_data else "Unknown",
+            "user_email": user_data.email if user_data else "Unknown",
+            "reason": report.reason,
+            "status": report.status.value if hasattr(report.status, 'value') else str(report.status),
+            "admin_notice": report.admin_notice,
+            "created_at": report.created_at.isoformat() if report.created_at else None,
+            "updated_at": report.updated_at.isoformat() if hasattr(report, 'updated_at') and report.updated_at else None
+        })
+    
+    return {
+        "reports": reports,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size
+    }
+
+
+@router.get("/contact-requests", response_model=dict)
+def get_all_contact_requests(
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+    page: int = 1,
+    page_size: int = 20
+):
+    """
+    Get all contact requests with pagination.
+    Protected route - requires admin authentication.
+    """
+    from app.models.property import ContactRequest
+    
+    skip = (page - 1) * page_size
+    
+    contacts_query = db.query(ContactRequest).offset(skip).limit(page_size).all()
+    total = db.query(ContactRequest).count()
+    
+    # Convert contact requests to dictionaries
+    contacts = []
+    for contact in contacts_query:
+        # Get property, sender, and owner details
+        property_data = db.query(Property).filter(Property.id == contact.property_id).first()
+        sender_data = db.query(User).filter(User.id == contact.sender_id).first()
+        owner_data = db.query(User).filter(User.id == contact.owner_id).first()
+        
+        contacts.append({
+            "id": str(contact.id),
+            "property_id": str(contact.property_id),
+            "property_title": property_data.property_title if property_data else "Unknown",
+            "sender_id": str(contact.sender_id),
+            "sender_name": sender_data.full_name if sender_data else "Unknown",
+            "sender_email": sender_data.email if sender_data else "Unknown",
+            "owner_id": str(contact.owner_id),
+            "owner_name": owner_data.full_name if owner_data else "Unknown",
+            "owner_email": owner_data.email if owner_data else "Unknown",
+            "message": contact.message,
+            "status": contact.status.value if hasattr(contact.status, 'value') else str(contact.status),
+            "created_at": contact.created_at.isoformat() if contact.created_at else None
+        })
+    
+    return {
+        "contacts": contacts,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size
+    }
+
+
+# User Actions
+@router.put("/users/{user_id}/block")
+def block_user(
+    user_id: str,
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Block/unblock a user."""
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user.is_active = not user.is_active
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": f"User {'blocked' if not user.is_active else 'unblocked'} successfully",
+            "is_active": user.is_active
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/users/{user_id}")
+def get_user_details(
+    user_id: str,
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Get detailed user information."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get user's properties count
+    properties_count = db.query(Property).filter(Property.owner_id == user_id).count()
+    
+    return {
+        "id": str(user.id),
+        "full_name": user.full_name,
+        "email": user.email,
+        "phone_number": user.phone_number,
+        "city": user.city,
+        "role": user.role.value if hasattr(user.role, 'value') else str(user.role),
+        "is_verified": user.is_verified,
+        "is_active": user.is_active,
+        "occupation": user.occupation,
+        "age": user.age,
+        "bio": user.bio,
+        "profile_photo": user.profile_photo,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+        "properties_count": properties_count
+    }
+
+
+# Property Actions
+@router.put("/properties/{property_id}/toggle-active")
+def toggle_property_active(
+    property_id: str,
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Activate/deactivate a property."""
+    try:
+        property_obj = db.query(Property).filter(Property.id == property_id).first()
+        if not property_obj:
+            raise HTTPException(status_code=404, detail="Property not found")
+        
+        property_obj.is_active = not property_obj.is_active
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": f"Property {'activated' if property_obj.is_active else 'deactivated'} successfully",
+            "is_active": property_obj.is_active
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/properties/{property_id}")
+def get_property_details(
+    property_id: str,
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Get detailed property information."""
+    from app.models.property import PropertyImage, PropertyAmenity, HouseRule
+    
+    property_obj = db.query(Property).filter(Property.id == property_id).first()
+    if not property_obj:
+        raise HTTPException(status_code=404, detail="Property not found")
+    
+    # Get owner details
+    owner = db.query(User).filter(User.id == property_obj.owner_id).first()
+    
+    # Get images
+    images = db.query(PropertyImage).filter(PropertyImage.property_id == property_id).all()
+    
+    # Get amenities
+    amenities = db.query(PropertyAmenity).filter(PropertyAmenity.property_id == property_id).all()
+    
+    # Get house rules
+    rules = db.query(HouseRule).filter(HouseRule.property_id == property_id).all()
+    
+    return {
+        "id": str(property_obj.id),
+        "property_title": property_obj.property_title,
+        "property_type": property_obj.property_type.value if hasattr(property_obj.property_type, 'value') else str(property_obj.property_type),
+        "city": property_obj.city,
+        "area_locality": property_obj.area_locality,
+        "description": property_obj.description,
+        "monthly_rent": property_obj.monthly_rent,
+        "deposit": property_obj.deposit,
+        "available_from": property_obj.available_from.isoformat() if property_obj.available_from else None,
+        "preferred_tenant": property_obj.preferred_tenant.value if hasattr(property_obj.preferred_tenant, 'value') else str(property_obj.preferred_tenant),
+        "is_active": property_obj.is_active,
+        "created_at": property_obj.created_at.isoformat() if property_obj.created_at else None,
+        "owner": {
+            "id": str(owner.id),
+            "full_name": owner.full_name,
+            "email": owner.email,
+            "phone_number": owner.phone_number
+        } if owner else None,
+        "images": [img.image_url for img in images],
+        "amenities": [amenity.amenity_name for amenity in amenities],
+        "house_rules": [rule.rule_text for rule in rules]
+    }
+
+
+# Report Actions
+@router.put("/reports/{report_id}/status")
+def update_report_status(
+    report_id: str,
+    status: str,
+    admin_notice: str = None,
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Update report status (pending, fixed, rejected) and optionally add admin notice."""
+    from app.models.property import Report, ReportStatus
+    from datetime import datetime
+    
+    try:
+        # Validate status
+        if status not in ['pending', 'fixed', 'rejected']:
+            raise HTTPException(status_code=400, detail="Invalid status. Must be 'pending', 'fixed', or 'rejected'")
+        
+        report = db.query(Report).filter(Report.id == report_id).first()
+        if not report:
+            raise HTTPException(status_code=404, detail="Report not found")
+        
+        # Update status
+        report.status = ReportStatus(status)
+        
+        # Update admin notice if provided
+        if admin_notice is not None:
+            report.admin_notice = admin_notice
+        
+        # Update timestamp
+        if hasattr(report, 'updated_at'):
+            report.updated_at = datetime.utcnow()
+        
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": f"Report status updated to {status}",
+            "status": status,
+            "admin_notice": report.admin_notice
+        }
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Invalid status value: {str(e)}")
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+

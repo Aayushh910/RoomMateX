@@ -15,6 +15,55 @@ from app.utils.dependencies import get_current_user
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
+# OPTIONS handlers for CORS preflight
+@router.options("/register")
+async def options_register():
+    """Handle CORS preflight for register"""
+    return {}
+
+
+@router.options("/login")
+async def options_login():
+    """Handle CORS preflight for login"""
+    return {}
+
+
+@router.options("/refresh")
+async def options_refresh():
+    """Handle CORS preflight for refresh"""
+    return {}
+
+
+@router.options("/send-otp")
+async def options_send_otp():
+    """Handle CORS preflight for send-otp"""
+    return {}
+
+
+@router.options("/verify-otp")
+async def options_verify_otp():
+    """Handle CORS preflight for verify-otp"""
+    return {}
+
+
+@router.options("/change-password")
+async def options_change_password():
+    """Handle CORS preflight for change-password"""
+    return {}
+
+
+@router.options("/forgot-password")
+async def options_forgot_password():
+    """Handle CORS preflight for forgot-password"""
+    return {}
+
+
+@router.options("/reset-password")
+async def options_reset_password():
+    """Handle CORS preflight for reset-password"""
+    return {}
+
+
 @router.post("/register", response_model=UserRegisterResponse, status_code=status.HTTP_201_CREATED)
 def register(user_data: UserRegister, db: Session = Depends(get_db)):
     """
