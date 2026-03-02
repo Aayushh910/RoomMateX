@@ -58,17 +58,17 @@ export const Navbar = () => {
                     {user.profile_photo ? (
                       <img 
                         src={getImageUrl(user.profile_photo)} 
-                        alt={user.name} 
+                        alt={user.full_name} 
                         className="w-7 h-7 rounded-full object-cover shadow-md group-hover:scale-110 transition-transform"
                       />
                     ) : (
                       <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-md group-hover:scale-110 transition-transform">
-                        {user.name?.[0] || 'U'}
+                        {user.full_name?.[0] || 'U'}
                       </div>
                     )}
                     <div className="hidden lg:block">
                       <p className="text-xs text-gray-500 font-medium">Welcome back</p>
-                      <p className="text-xs font-bold text-gray-800 -mt-0.5">{user.name?.split(' ')[0] || 'User'}</p>
+                      <p className="text-xs font-bold text-gray-800 -mt-0.5">{user.full_name?.split(' ')[0] || 'User'}</p>
                     </div>
                     <svg className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                   </Link>

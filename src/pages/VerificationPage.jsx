@@ -242,7 +242,7 @@ export const VerificationPage = () => {
 
                     {step === 1 && (
                         <div className="space-y-4">
-                            <h2 className="text-xl font-bold text-gray-900 mb-4">Choose Verification Method</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-4">Choose Verification Method </h2>
                                 <button
                                     onClick={() => handleSendOtp('email')}
                                     className={`w-full p-4 border-2 border-gray-200 rounded-xl transition-all group ${

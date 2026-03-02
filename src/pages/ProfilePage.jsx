@@ -358,10 +358,10 @@ export const ProfilePage = () => {
                                                     type="text"
                                                     name="name"
                                                     value={formData.name}
-                                                    onChange={handleChange}
-                                                    disabled={!isEditing}
-                                                    placeholder={!isEditing && !formData.name ? 'Not provided' : ''}
-                                                    className={`w-full px-4 py-3 rounded-xl border transition-all ${isEditing ? 'border-gray-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 bg-white' : formData.name ? 'border-transparent bg-blue-50 text-gray-900 font-medium' : 'border-transparent bg-gray-50 text-gray-400'}`}
+                                                    disabled={true}
+                                                    placeholder={!formData.name ? 'Not provided' : ''}
+                                                    className={`w-full px-4 py-3 rounded-xl border transition-all cursor-not-allowed ${formData.name ? 'border-transparent bg-gray-100 text-gray-700 font-medium' : 'border-transparent bg-gray-50 text-gray-400'}`}
+                                                    title="Name cannot be changed"
                                                 />
                                             </div>
                                             <div>
@@ -370,10 +370,10 @@ export const ProfilePage = () => {
                                                     type="email"
                                                     name="email"
                                                     value={formData.email}
-                                                    onChange={handleChange}
-                                                    disabled={!isEditing}
-                                                    placeholder={!isEditing && !formData.email ? 'Not provided' : ''}
-                                                    className={`w-full px-4 py-3 rounded-xl border transition-all ${isEditing ? 'border-gray-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 bg-white' : formData.email ? 'border-transparent bg-blue-50 text-gray-900 font-medium' : 'border-transparent bg-gray-50 text-gray-400'}`}
+                                                    disabled={true}
+                                                    placeholder={!formData.email ? 'Not provided' : ''}
+                                                    className={`w-full px-4 py-3 rounded-xl border transition-all cursor-not-allowed ${formData.email ? 'border-transparent bg-gray-100 text-gray-700 font-medium' : 'border-transparent bg-gray-50 text-gray-400'}`}
+                                                    title="Email cannot be changed"
                                                 />
                                             </div>
                                             <div>

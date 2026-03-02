@@ -6,7 +6,7 @@ export const LandingPage = () => {
   const [typedText, setTypedText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
-  const words = ['Perfect Room', 'Vibe Roomie', 'Loyal Tenant', 'Room & Roommate'];
+  const words = ['Perfect Room', 'Vibe Roommie', 'Loyal Tenant', 'Room & Roommate'];
 
   useEffect(() => {
     const currentWord = words[currentIndex];
@@ -192,9 +192,9 @@ export const LandingPage = () => {
               <div className="grid md:grid-cols-3 gap-8">
                 {/* Placeholder Room Cards */}
                 {[
-                  { title: 'Cozy Studio Apartment', location: 'Downtown, Mumbai', price: '15,000', image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400' },
-                  { title: 'Spacious Apartment', location: 'Koramangala, Bangalore', price: '25,000', image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400' },
-                  { title: 'Modern Shared Room', location: 'Gurgaon, Delhi NCR', price: '12,000', image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400' },
+                  { title: 'Cozy Studio Apartment', location: 'Ahmedabad, Gujarat', price: '15,000', image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400' },
+                  { title: 'Spacious Apartment', location: 'Surat, gujarat', price: '25,000', image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400' },
+                  { title: 'Modern Shared Room', location: 'Vadodara, Gujarat', price: '12,000', image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400' },
                 ].map((room, idx) => (
                   <Link
                     key={idx}
@@ -304,21 +304,21 @@ export const LandingPage = () => {
               <div className="grid md:grid-cols-3 gap-8">
                 {[
                   {
-                    name: 'Priya Sharma',
+                    name: 'Rakesh Mehta',
                     role: 'Student',
                     image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
                     text: 'Found my perfect PG within a week! The verification process made me feel so safe.',
                     rating: 5
                   },
                   {
-                    name: 'Arjun Mehta',
+                    name: 'Aryan Shah',
                     role: 'Software Engineer',
                     image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
                     text: 'Amazing platform! Connected with great roommates who share similar interests.',
                     rating: 5
                   },
                   {
-                    name: 'Sneha Gupta',
+                    name: 'Sneha Patel',
                     role: 'Designer',
                     image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
                     text: 'The review system helped me make an informed decision. Highly recommend!',
