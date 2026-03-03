@@ -7,9 +7,10 @@ from app.models.property import Property, PropertyImage, PropertyAmenity, HouseR
 from app.models.user import User
 from app.schemas.property import PropertyCreate, PropertyUpdate
 from app.utils.file_upload import FileUploadService
+from app.services.base_service import BaseService
 
 
-class PropertyService:
+class PropertyService(BaseService):
     """Service for property operations."""
     
     @staticmethod
@@ -173,7 +174,12 @@ class PropertyService:
     @staticmethod
     def get_property_by_id(property_id: UUID, db: Session) -> Property:
         """Get property by ID with detailed information."""
-        property_obj = db.query(Property).filter(Property.id == property_id).first()
+        property_obj = db.query(Property).options(
+            joinedload(Property.images),
+            joinedload(Property.amenities),
+            joinedload(Property.house_rules),
+            joinedload(Property.owner)
+        ).filter(Property.id == property_id).first()
         
         if not property_obj:
             raise HTTPException(
@@ -185,36 +191,15 @@ class PropertyService:
     
     @staticmethod
     def get_property_details(property_id: UUID, db: Session, current_user: Optional[User] = None) -> tuple[Property, float, int]:
-        """Get property details with rating and review count.
-        
-        Args:
-            property_id: The property UUID
-            db: Database session
-            current_user: Optional authenticated user (for owner access to inactive properties)
-        
-        Returns:
-            Tuple of (property, avg_rating, total_reviews)
-        """
+        """Get property details with rating and review count."""
         from app.models.property import Review
         from sqlalchemy import func
         
-        property_obj = db.query(Property).filter(Property.id == property_id).first()
+        # Use base service method
+        property_obj = PropertyService.get_or_404(db, Property, property_id, "Property not found")
         
-        if not property_obj:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Property not found"
-            )
-        
-        # Check if user is the owner
-        is_owner = current_user and str(property_obj.owner_id) == str(current_user.id)
-        
-        # If not the owner, check if property is active
-        if not is_owner and not property_obj.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Property not found"
-            )
+        # Check if property is accessible
+        PropertyService.validate_active_property(property_obj, allow_owner=True, current_user=current_user)
         
         # Calculate average rating and total reviews
         rating_data = db.query(
@@ -243,12 +228,8 @@ class PropertyService:
         """Update property."""
         property_obj = PropertyService.get_property_by_id(property_id, db)
         
-        # Check ownership
-        if property_obj.owner_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You can only update your own properties"
-            )
+        # Check ownership using base service
+        PropertyService.check_ownership(property_obj, current_user.id, "You can only update your own properties")
         
         # Update fields
         update_data = property_data.dict(exclude_unset=True)
@@ -306,56 +287,36 @@ class PropertyService:
     @staticmethod
     def delete_property(property_id: UUID, current_user: User, db: Session) -> None:
         """
-        Soft delete property (set is_active = False).
+        Completely delete property from database.
         
-        This preserves data for history and analytics while hiding from public view.
+        This removes the property and all related data permanently.
         """
         property_obj = PropertyService.get_property_by_id(property_id, db)
         
-        # Check ownership
-        if property_obj.owner_id != current_user.id:
+        # Check ownership using base service
+        PropertyService.check_ownership(property_obj, current_user.id, "You can only delete your own properties")
+        
+        try:
+            # Collect image URLs for Cloudinary deletion before deleting the property
+            image_urls = []
+            if hasattr(property_obj, 'images') and property_obj.images:
+                image_urls = [img.image_url for img in property_obj.images if img.image_url]
+            
+            # Delete the property (cascade will handle related records)
+            db.delete(property_obj)
+            db.commit()
+            
+            # Delete images from Cloudinary after successful database deletion
+            if image_urls:
+                try:
+                    FileUploadService.delete_multiple_images(image_urls)
+                except Exception as cloudinary_error:
+                    # Log the error but don't fail the entire operation since DB deletion succeeded
+                    print(f"Warning: Failed to delete some images from Cloudinary: {cloudinary_error}")
+                
+        except Exception as e:
+            db.rollback()
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You can only delete your own properties"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to delete property: {str(e)}"
             )
-        
-        # Soft delete - set is_active to False
-        property_obj.is_active = False
-        db.commit()
-
-    @staticmethod
-    def track_property_view(property_id: UUID, user: User, db: Session) -> None:
-        """Track when a user views a property."""
-        from app.models.property import RecentlyViewed
-        from datetime import datetime
-        
-        # Check if property exists and is active
-        property_obj = db.query(Property).filter(
-            Property.id == property_id,
-            Property.is_active == True
-        ).first()
-        
-        if not property_obj:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Property not found or inactive"
-            )
-        
-        # Check if user already viewed this property
-        existing_view = db.query(RecentlyViewed).filter(
-            RecentlyViewed.user_id == user.id,
-            RecentlyViewed.property_id == property_id
-        ).first()
-        
-        if existing_view:
-            # Update viewed_at timestamp
-            existing_view.viewed_at = datetime.utcnow()
-        else:
-            # Create new view record
-            new_view = RecentlyViewed(
-                user_id=user.id,
-                property_id=property_id
-            )
-            db.add(new_view)
-        
-        db.commit()

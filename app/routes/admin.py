@@ -736,9 +736,7 @@ def notify_property_owner(
             report.updated_at = datetime.utcnow()
             db.commit()
         
-        # In a real application, you would send an email here
-        # For now, we'll just log it and return success
-        # TODO: Implement email notification
+        # Email notification would be implemented here in production
         
         return {
             "success": True,

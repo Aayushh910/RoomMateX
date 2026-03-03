@@ -208,60 +208,6 @@ def get_property(
     return PropertyDetailsResponse.from_orm(property_obj, avg_rating, total_reviews)
 
 
-@router.get("/{property_id}/check-access", response_model=dict)
-def check_property_access(
-    property_id: UUID,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Check if current user has an accepted request for this property.
-    Returns owner contact details if access is granted.
-    """
-    from app.models.property import ContactRequest, RequestStatus
-    
-    # Check if user has accepted request
-    accepted_request = db.query(ContactRequest).filter(
-        ContactRequest.property_id == property_id,
-        ContactRequest.sender_id == current_user.id,
-        ContactRequest.status == RequestStatus.accepted
-    ).first()
-    
-    if not accepted_request:
-        return {"has_access": False}
-    
-    # Get property with owner details
-    property_obj = PropertyService.get_property_by_id(property_id, db)
-    
-    return {
-        "has_access": True,
-        "owner_contact": {
-            "email": property_obj.owner.email,
-            "phone": property_obj.owner.phone_number
-        }
-    }
-
-
-@router.post("/{property_id}/track-view", response_model=MessageResponse, status_code=status.HTTP_200_OK)
-def track_property_view(
-    property_id: UUID,
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user_optional)
-):
-    """
-    Track when a user views a property.
-    
-    Optional authentication - only tracks if user is logged in.
-    Updates or creates a recently viewed record.
-    """
-    # Only track if user is authenticated
-    if current_user:
-        PropertyService.track_property_view(property_id, current_user, db)
-        return MessageResponse(message="Property view tracked")
-    
-    return MessageResponse(message="View not tracked - authentication required")
-
-
 @router.put("/{property_id}", response_model=PropertyResponse)
 async def update_property(
     property_id: UUID,
@@ -352,11 +298,12 @@ def delete_property(
     db: Session = Depends(get_db)
 ):
     """
-    Delete property.
+    Permanently delete property from database.
     
     Requirements:
     - User must be the owner
-    - Deletes property, images, and amenities
+    - Deletes property and all related data permanently
+    - Removes images from Cloudinary
     """
     PropertyService.delete_property(property_id, current_user, db)
     
@@ -454,7 +401,6 @@ def create_review(
     return MessageResponse(message="Review created successfully")
 
 
-@router.post("/{property_id}/contact", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
 @router.post("/{property_id}/report", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
 def report_property(
     property_id: UUID,

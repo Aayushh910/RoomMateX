@@ -21,116 +21,116 @@ def send_contact_form(form_data: ContactFormData):
     try:
         # Create HTML email for admin
         admin_email_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-        <meta charset="UTF-8">
-        <title>New Contact Form Submission - RoomMateX</title>
-        </head>
-        <body style="margin:0; padding:0; background-color:#f3f4f6; font-family:Arial, Helvetica, sans-serif;">
+  <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <title>New Contact Form Submission - RoomMateX</title>
+    </head>
 
-        <table width="100%" cellpadding="0" cellspacing="0" style="padding:30px 0;">
-            <tr>
-            <td align="center">
+    <body style="margin:0; padding:0; background-color:#f4f6f9; font-family:Arial, Helvetica, sans-serif;">
 
-                <!-- Main Container -->
-                <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+    <table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 0;">
+    <tr>
+    <td align="center">
 
-                <!-- Header -->
-                <tr>
-                    <td align="center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding:30px;">
-                    <h1 style="color:#ffffff; margin:0; font-size:24px;">📬 New Contact Form Submission</h1>
-                    <p style="color:#e0e7ff; margin:8px 0 0; font-size:14px;">
-                        RoomMateX Contact Form
-                    </p>
-                    </td>
-                </tr>
+    <!-- Main Card -->
+    <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,0.06);">
 
-                <!-- Body -->
-                <tr>
-                    <td style="padding:40px 35px;">
+    <!-- Top Accent Bar -->
+    <tr>
+    <td style="height:4px; background-color:#111827;"></td>
+    </tr>
 
-                    <h2 style="margin-top:0; color:#111827; font-size:20px;">Contact Details</h2>
+    <!-- Header -->
+    <tr>
+    <td style="padding:24px 28px 12px 28px;">
+    <h1 style="margin:0; font-size:18px; color:#111827; font-weight:600;">
+    New Contact Form Submission
+    </h1>
+    <p style="margin:6px 0 0 0; font-size:13px; color:#6b7280;">
+    RoomMateX Contact Notification
+    </p>
+    </td>
+    </tr>
 
-                    <!-- Sender Info Box -->
-                    <div style="
-                        background-color:#f0f9ff;
-                        border-left:4px solid #3b82f6;
-                        padding:20px;
-                        margin:20px 0;
-                        border-radius:4px;">
-                        <table width="100%" cellpadding="0" cellspacing="0">
-                            <tr>
-                                <td style="padding:8px 0; color:#374151; font-size:15px;">
-                                    <strong style="color:#1e40af;">Name:</strong> {form_data.name}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding:8px 0; color:#374151; font-size:15px;">
-                                    <strong style="color:#1e40af;">Email:</strong> 
-                                    <a href="mailto:{form_data.email}" style="color:#3b82f6; text-decoration:none;">
-                                        {form_data.email}
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding:8px 0; color:#374151; font-size:15px;">
-                                    <strong style="color:#1e40af;">Subject:</strong> {form_data.subject}
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
+    <!-- Divider -->
+    <tr>
+    <td style="padding:0 28px;">
+    <hr style="border:none; border-top:1px solid #e5e7eb; margin:10px 0;">
+    </td>
+    </tr>
 
-                    <!-- Message Box -->
-                    <div style="margin:25px 0;">
-                        <h3 style="color:#111827; font-size:16px; margin-bottom:12px;">Message:</h3>
-                        <div style="
-                            background-color:#f9fafb;
-                            border:1px solid #e5e7eb;
-                            padding:20px;
-                            border-radius:6px;
-                            color:#374151;
-                            font-size:15px;
-                            line-height:1.6;
-                            white-space:pre-wrap;">
-{form_data.message}
-                        </div>
-                    </div>
+    <!-- Body -->
+    <tr>
+    <td style="padding:16px 28px 24px 28px; font-size:14px; color:#374151;">
 
-                    <!-- Action Button -->
-                    <div style="text-align:center; margin:30px 0;">
-                        <a href="mailto:{form_data.email}?subject=Re: {form_data.subject}" 
-                           style="
-                            display:inline-block;
-                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                            color:#ffffff;
-                            padding:14px 32px;
-                            text-decoration:none;
-                            border-radius:6px;
-                            font-weight:bold;
-                            font-size:15px;">
-                            Reply to {form_data.name}
-                        </a>
-                    </div>
+    <!-- Contact Info -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:18px;">
+    <tr>
+    <td style="padding:6px 0; width:90px; font-weight:600; color:#111827;">Name</td>
+    <td style="padding:6px 0;">{form_data.name}</td>
+    </tr>
+    <tr>
+    <td style="padding:6px 0; font-weight:600; color:#111827;">Email</td>
+    <td style="padding:6px 0;">
+    <a href="mailto:{form_data.email}" style="color:#2563eb; text-decoration:none;">
+    {form_data.email}
+    </a>
+    </td>
+    </tr>
+    <tr>
+    <td style="padding:6px 0; font-weight:600; color:#111827;">Subject</td>
+    <td style="padding:6px 0;">{form_data.subject}</td>
+    </tr>
+    </table>
 
-                    <hr style="border:none; border-top:1px solid #e5e7eb; margin:30px 0;">
+    <!-- Message Box -->
+    <div style="
+    background-color:#f9fafb;
+    border:1px solid #e5e7eb;
+    border-radius:6px;
+    padding:16px;
+    font-size:14px;
+    line-height:1.6;
+    white-space:pre-wrap;">
+    {form_data.message}
+    </div>
 
-                    <p style="text-align:center; font-size:12px; color:#9ca3af;">
-                        © 2026 RoomMateX. All rights reserved.<br>
-                        This is an automated notification from your contact form.
-                    </p>
+    <!-- Button -->
+    <div style="text-align:center; margin-top:22px;">
+    <a href="mailto:{form_data.email}?subject=Re: {form_data.subject}"
+    style="
+    display:inline-block;
+    background-color:#111827;
+    color:#ffffff;
+    padding:10px 24px;
+    border-radius:5px;
+    text-decoration:none;
+    font-size:13px;
+    font-weight:600;">
+    Reply to {form_data.name}
+    </a>
+    </div>
 
-                    </td>
-                </tr>
+    </td>
+    </tr>
 
-                </table>
+    <!-- Footer -->
+    <tr>
+    <td style="padding:14px 28px; border-top:1px solid #e5e7eb; text-align:center; font-size:12px; color:#9ca3af;">
+    © 2026 RoomMateX · Automated Contact Notification
+    </td>
+    </tr>
 
-            </td>
-            </tr>
-        </table>
+    </table>
 
-        </body>
-        </html>
+    </td>
+    </tr>
+    </table>
+
+    </body>
+    </html>
         """
 
         # Send email to admin with Reply-To header set to user's email

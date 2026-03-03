@@ -4,9 +4,10 @@ from uuid import UUID
 from app.models.property import Report, Property
 from app.models.user import User
 from app.schemas.property import ReportCreate
+from app.services.base_service import BaseService
 
 
-class ReportService:
+class ReportService(BaseService):
     """Service for report operations."""
     
     @staticmethod
@@ -17,26 +18,15 @@ class ReportService:
         db: Session
     ) -> Report:
         """Create a report for a property."""
-        # Check if property exists
-        property_obj = db.query(Property).filter(Property.id == property_id).first()
+        # Check if property exists using base service
+        property_obj = ReportService.get_or_404(db, Property, property_id, "Property not found")
         
-        if not property_obj:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Property not found"
-            )
-        
-        # Check if user already reported this property
-        existing_report = db.query(Report).filter(
-            Report.property_id == property_id,
-            Report.user_id == current_user.id
-        ).first()
-        
-        if existing_report:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You have already reported this property"
-            )
+        # Check for duplicate report using base service
+        ReportService.check_duplicate(
+            db, Report, 
+            {"property_id": property_id, "user_id": current_user.id},
+            "You have already reported this property"
+        )
         
         # Create report
         new_report = Report(

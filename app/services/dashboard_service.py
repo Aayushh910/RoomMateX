@@ -16,7 +16,6 @@ class DashboardService:
         Returns:
         - my_listings_count: Properties owned by user
         - wishlist_count: Properties in user's wishlist
-        - recently_viewed_count: Recently viewed properties
         """
         # Count user's properties
         my_listings_count = db.query(Property).filter(
@@ -28,19 +27,9 @@ class DashboardService:
             Wishlist.user_id == current_user.id
         ).count()
         
-        # Count recently viewed properties (only active properties)
-        from app.models.property import RecentlyViewed
-        recently_viewed_count = db.query(RecentlyViewed).join(
-            Property, RecentlyViewed.property_id == Property.id
-        ).filter(
-            RecentlyViewed.user_id == current_user.id,
-            Property.is_active == True
-        ).count()
-        
         return {
             "my_listings_count": my_listings_count,
-            "wishlist_count": wishlist_count,
-            "recently_viewed_count": recently_viewed_count
+            "wishlist_count": wishlist_count
         }
     
     @staticmethod

@@ -8,9 +8,6 @@ from app.services.user_service import UserService
 from app.services.otp_service import OTPService
 from app.core.security import verify_password, get_password_hash
 from app.utils.file_upload import FileUploadService
-from pathlib import Path
-import uuid
-import shutil
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -200,35 +197,21 @@ async def upload_profile_photo(
     """
     Upload or update user's profile photo.
     
-    Accepts: JPG, JPEG, PNG
+    Accepts: JPG, JPEG, PNG, WebP
     Max size: 5MB
     
     Returns updated user profile.
     """
-    # Create profile photos directory if it doesn't exist
-    profile_dir = Path("uploads/profiles")
-    profile_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Validate and save the image
     try:
         # Delete old profile photo if exists
         if current_user.profile_photo:
             FileUploadService.delete_image(current_user.profile_photo)
         
-        # Validate file
-        FileUploadService.validate_image(file)
-        
-        # Generate unique filename
-        file_ext = Path(file.filename).suffix.lower()
-        unique_filename = f"{uuid.uuid4()}{file_ext}"
-        file_path = profile_dir / unique_filename
-        
-        # Save file
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        # Save new profile photo (to Cloudinary or local storage)
+        photo_url = await FileUploadService.save_image(file, folder="profiles")
         
         # Update user profile
-        current_user.profile_photo = f"/uploads/profiles/{unique_filename}"
+        current_user.profile_photo = photo_url
         db.commit()
         db.refresh(current_user)
         

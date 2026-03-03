@@ -28,7 +28,6 @@ def get_dashboard_summary(
     Returns:
     - my_listings_count: Number of properties owned by user
     - wishlist_count: Number of properties in wishlist
-    - recently_viewed_count: Number of recently viewed properties
     """
     summary = DashboardService.get_summary(current_user, db)
     return DashboardSummaryResponse(**summary)

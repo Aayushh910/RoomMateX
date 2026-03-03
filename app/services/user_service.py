@@ -3,7 +3,7 @@ from fastapi import HTTPException, status
 from app.models.user import User
 from app.models.property import (
     Property, PropertyImage, PropertyAmenity, HouseRule,
-    Review, Wishlist, ContactRequest, Report, RecentlyViewed
+    Review, Wishlist, Report
 )
 from app.utils.file_upload import FileUploadService
 
@@ -50,19 +50,10 @@ class UserService:
             # 3. Delete wishlist entries by user
             db.query(Wishlist).filter(Wishlist.user_id == current_user.id).delete()
             
-            # 4. Delete contact requests sent by user
-            db.query(ContactRequest).filter(ContactRequest.sender_id == current_user.id).delete()
-            
-            # 5. Delete contact requests received by user (as owner)
-            db.query(ContactRequest).filter(ContactRequest.owner_id == current_user.id).delete()
-            
-            # 6. Delete reports submitted by user
+            # 4. Delete reports submitted by user
             db.query(Report).filter(Report.user_id == current_user.id).delete()
             
-            # 7. Delete recently viewed records by user
-            db.query(RecentlyViewed).filter(RecentlyViewed.user_id == current_user.id).delete()
-            
-            # 8. Delete the user account
+            # 5. Delete the user account
             db.delete(current_user)
             
             # Commit all changes

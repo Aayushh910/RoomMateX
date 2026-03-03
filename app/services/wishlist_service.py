@@ -3,9 +3,10 @@ from fastapi import HTTPException, status
 from uuid import UUID
 from app.models.property import Wishlist, Property
 from app.models.user import User
+from app.services.base_service import BaseService
 
 
-class WishlistService:
+class WishlistService(BaseService):
     """Service for wishlist operations."""
     
     @staticmethod
@@ -27,17 +28,12 @@ class WishlistService:
                 detail="Property not found or inactive"
             )
         
-        # Check if already in wishlist
-        existing_wishlist = db.query(Wishlist).filter(
-            Wishlist.user_id == current_user.id,
-            Wishlist.property_id == property_id
-        ).first()
-        
-        if existing_wishlist:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Property already in wishlist"
-            )
+        # Check for duplicate using base service
+        WishlistService.check_duplicate(
+            db, Wishlist,
+            {"user_id": current_user.id, "property_id": property_id},
+            "Property already in wishlist"
+        )
         
         # Add to wishlist
         new_wishlist = Wishlist(

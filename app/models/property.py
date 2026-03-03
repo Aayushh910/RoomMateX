@@ -57,7 +57,6 @@ class Property(Base):
     house_rules = relationship("HouseRule", back_populates="property", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="property", cascade="all, delete-orphan")
     wishlists = relationship("Wishlist", back_populates="property", cascade="all, delete-orphan")
-    contact_requests = relationship("ContactRequest", back_populates="property", cascade="all, delete-orphan")
     reports = relationship("Report", back_populates="property", cascade="all, delete-orphan")
 
 
@@ -125,35 +124,11 @@ class Wishlist(Base):
     user = relationship("User", backref="wishlists")
 
 
-class RequestStatus(str, enum.Enum):
-    """Request status enum"""
-    pending = "pending"
-    accepted = "accepted"
-    rejected = "rejected"
-
-
 class ReportStatus(str, enum.Enum):
     """Report status enum"""
     pending = "pending"
     fixed = "fixed"
     rejected = "rejected"
-
-
-class ContactRequest(Base):
-    __tablename__ = "contact_requests"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    property_id = Column(UUID(as_uuid=True), ForeignKey("properties.id", ondelete="CASCADE"), nullable=False, index=True)
-    sender_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    owner_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    message = Column(Text, nullable=True)
-    status = Column(SQLEnum(RequestStatus), nullable=False, default=RequestStatus.pending)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    
-    # Relationships
-    property = relationship("Property", back_populates="contact_requests")
-    sender = relationship("User", foreign_keys=[sender_id], backref="sent_contacts")
-    owner = relationship("User", foreign_keys=[owner_id], backref="received_contacts")
 
 
 class Report(Base):
@@ -174,16 +149,3 @@ class Report(Base):
     # Relationships
     property = relationship("Property", back_populates="reports")
     user = relationship("User", backref="reports")
-
-
-class RecentlyViewed(Base):
-    __tablename__ = "recently_viewed"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    property_id = Column(UUID(as_uuid=True), ForeignKey("properties.id", ondelete="CASCADE"), nullable=False, index=True)
-    viewed_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    
-    # Relationships
-    property = relationship("Property", backref="views")
-    user = relationship("User", backref="recently_viewed")

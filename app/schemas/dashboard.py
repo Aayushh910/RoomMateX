@@ -8,7 +8,11 @@ class DashboardSummaryResponse(BaseModel):
     """Dashboard summary counts."""
     my_listings_count: int
     wishlist_count: int
-    recently_viewed_count: int
+
+
+def _extract_thumbnail(obj) -> Optional[str]:
+    """Helper function to extract thumbnail from property object."""
+    return obj.images[0].image_url if obj.images else None
 
 
 class PropertyBasicResponse(BaseModel):
@@ -24,17 +28,13 @@ class PropertyBasicResponse(BaseModel):
     
     @classmethod
     def from_orm(cls, obj):
-        # Get first image as thumbnail
-        thumbnail = obj.images[0].image_url if obj.images else None
-        
-        data = {
-            "id": obj.id,
-            "property_title": obj.property_title,
-            "city": obj.city,
-            "monthly_rent": obj.monthly_rent,
-            "thumbnail_image": thumbnail
-        }
-        return cls(**data)
+        return cls(
+            id=obj.id,
+            property_title=obj.property_title,
+            city=obj.city,
+            monthly_rent=obj.monthly_rent,
+            thumbnail_image=_extract_thumbnail(obj)
+        )
 
 
 class MyListingResponse(BaseModel):
@@ -45,21 +45,19 @@ class MyListingResponse(BaseModel):
     monthly_rent: int
     thumbnail_image: Optional[str] = None
     created_at: datetime
+    is_active: bool
     
     class Config:
         from_attributes = True
     
     @classmethod
     def from_orm(cls, obj):
-        # Get first image as thumbnail
-        thumbnail = obj.images[0].image_url if obj.images else None
-        
-        data = {
-            "id": obj.id,
-            "property_title": obj.property_title,
-            "city": obj.city,
-            "monthly_rent": obj.monthly_rent,
-            "thumbnail_image": thumbnail,
-            "created_at": obj.created_at
-        }
-        return cls(**data)
+        return cls(
+            id=obj.id,
+            property_title=obj.property_title,
+            city=obj.city,
+            monthly_rent=obj.monthly_rent,
+            thumbnail_image=_extract_thumbnail(obj),
+            created_at=obj.created_at,
+            is_active=obj.is_active
+        )

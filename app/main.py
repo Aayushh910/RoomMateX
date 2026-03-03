@@ -1,9 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
-from app.routes import auth, user, property, wishlist, review, report, dashboard, admin, notification, contact
-from pathlib import Path
+from app.routes import auth, user, property, wishlist, dashboard, admin, notification, contact
 
 app = FastAPI(
     title="RoomMateX API",
@@ -28,18 +26,11 @@ app.add_middleware(
     max_age=3600,
 )
 
-# Serve uploaded files
-uploads_dir = Path("uploads")
-uploads_dir.mkdir(exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-
 # Include routers
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(property.router)
 app.include_router(wishlist.router)
-app.include_router(review.router)
-app.include_router(report.router)
 app.include_router(dashboard.router)
 app.include_router(admin.router)
 app.include_router(notification.router)
@@ -48,9 +39,7 @@ app.include_router(contact.router)
 
 @app.get("/")
 def root():
-    return {
-        "message": "Successfulllllllllllllllllllllllll!😌",
-    }
+    return {"message": "RoomMateX API is running successfully"}
 
 
 @app.get("/health")
