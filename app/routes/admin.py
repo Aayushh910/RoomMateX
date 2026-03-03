@@ -58,12 +58,6 @@ async def options_reports():
     return {}
 
 
-@router.options("/contact-requests")
-async def options_contacts():
-    """Handle CORS preflight for contacts"""
-    return {}
-
-
 @router.options("/reports/{report_id}/status")
 async def options_report_status():
     """Handle CORS preflight for report status"""
@@ -173,6 +167,8 @@ def get_analytics_overview(
     Protected route - requires admin authentication.
     """
     try:
+        from app.models.property import Report, ReportStatus
+        
         # Basic stats
         total_users = db.query(User).count()
         verified_users = db.query(User).filter(User.is_verified == True).count()
@@ -181,6 +177,12 @@ def get_analytics_overview(
         total_properties = db.query(Property).count()
         active_properties = db.query(Property).filter(Property.is_active == True).count()
         inactive_properties = total_properties - active_properties
+        
+        # Report stats
+        total_reports = db.query(Report).count()
+        pending_reports = db.query(Report).filter(Report.status == ReportStatus.pending).count()
+        fixed_reports = db.query(Report).filter(Report.status == ReportStatus.fixed).count()
+        rejected_reports = db.query(Report).filter(Report.status == ReportStatus.rejected).count()
         
         # User role distribution
         room_seekers = db.query(User).filter(User.role == 'room_seeker').count()
@@ -287,7 +289,11 @@ def get_analytics_overview(
                 "inactive_properties": inactive_properties,
                 "total_reviews": total_reviews,
                 "average_rating": avg_rating,
-                "total_wishlists": total_wishlists
+                "total_wishlists": total_wishlists,
+                "total_reports": total_reports,
+                "pending_reports": pending_reports,
+                "fixed_reports": fixed_reports,
+                "rejected_reports": rejected_reports
             },
             "user_roles": [
                 {"name": "Room Seekers", "value": room_seekers},
@@ -305,6 +311,11 @@ def get_analytics_overview(
             "property_status": [
                 {"name": "Active", "value": active_properties},
                 {"name": "Inactive", "value": inactive_properties}
+            ],
+            "report_status": [
+                {"name": "Pending", "value": pending_reports},
+                {"name": "Fixed", "value": fixed_reports},
+                {"name": "Rejected", "value": rejected_reports}
             ]
         }
     except Exception as e:
@@ -457,18 +468,59 @@ def get_all_reports(
     admin: dict = Depends(get_current_admin),
     db: Session = Depends(get_db),
     page: int = 1,
-    page_size: int = 20
+    page_size: int = 20,
+    search: str = None,
+    status: str = None,
+    date_from: str = None,
+    date_to: str = None
 ):
     """
-    Get all property reports with pagination.
+    Get all property reports with pagination and filters.
     Protected route - requires admin authentication.
+    
+    Filters:
+    - search: Search in property title, user name, or user email
+    - status: Filter by report status (pending, fixed, rejected)
+    - date_from: Filter reports from this date (YYYY-MM-DD)
+    - date_to: Filter reports until this date (YYYY-MM-DD)
     """
-    from app.models.property import Report
+    from app.models.property import Report, ReportStatus
+    from datetime import datetime
     
     skip = (page - 1) * page_size
     
-    reports_query = db.query(Report).offset(skip).limit(page_size).all()
-    total = db.query(Report).count()
+    # Build query with filters
+    query = db.query(Report)
+    
+    # Apply status filter
+    if status:
+        try:
+            query = query.filter(Report.status == ReportStatus(status))
+        except ValueError:
+            pass  # Invalid status, ignore filter
+    
+    # Apply date filters
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, '%Y-%m-%d')
+            query = query.filter(Report.created_at >= from_date)
+        except ValueError:
+            pass  # Invalid date format, ignore filter
+    
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, '%Y-%m-%d')
+            # Add one day to include the entire end date
+            to_date = to_date.replace(hour=23, minute=59, second=59)
+            query = query.filter(Report.created_at <= to_date)
+        except ValueError:
+            pass  # Invalid date format, ignore filter
+    
+    # Get total count before pagination
+    total = query.count()
+    
+    # Apply pagination
+    reports_query = query.order_by(Report.created_at.desc()).offset(skip).limit(page_size).all()
     
     # Convert reports to dictionaries
     reports = []
@@ -476,6 +528,16 @@ def get_all_reports(
         # Get property and user details
         property_data = db.query(Property).filter(Property.id == report.property_id).first()
         user_data = db.query(User).filter(User.id == report.user_id).first()
+        
+        # Apply search filter (after fetching related data)
+        if search:
+            search_lower = search.lower()
+            property_title = property_data.property_title.lower() if property_data else ""
+            user_name = user_data.full_name.lower() if user_data else ""
+            user_email = user_data.email.lower() if user_data else ""
+            
+            if not (search_lower in property_title or search_lower in user_name or search_lower in user_email):
+                continue
         
         reports.append({
             "id": str(report.id),
@@ -487,66 +549,21 @@ def get_all_reports(
             "reason": report.reason,
             "status": report.status.value if hasattr(report.status, 'value') else str(report.status),
             "admin_notice": report.admin_notice,
+            "owner_notice": report.owner_notice if hasattr(report, 'owner_notice') else None,
             "created_at": report.created_at.isoformat() if report.created_at else None,
             "updated_at": report.updated_at.isoformat() if hasattr(report, 'updated_at') and report.updated_at else None
         })
+    
+    # Adjust total if search filter was applied
+    if search:
+        total = len(reports)
     
     return {
         "reports": reports,
         "total": total,
         "page": page,
         "page_size": page_size,
-        "total_pages": (total + page_size - 1) // page_size
-    }
-
-
-@router.get("/contact-requests", response_model=dict)
-def get_all_contact_requests(
-    admin: dict = Depends(get_current_admin),
-    db: Session = Depends(get_db),
-    page: int = 1,
-    page_size: int = 20
-):
-    """
-    Get all contact requests with pagination.
-    Protected route - requires admin authentication.
-    """
-    from app.models.property import ContactRequest
-    
-    skip = (page - 1) * page_size
-    
-    contacts_query = db.query(ContactRequest).offset(skip).limit(page_size).all()
-    total = db.query(ContactRequest).count()
-    
-    # Convert contact requests to dictionaries
-    contacts = []
-    for contact in contacts_query:
-        # Get property, sender, and owner details
-        property_data = db.query(Property).filter(Property.id == contact.property_id).first()
-        sender_data = db.query(User).filter(User.id == contact.sender_id).first()
-        owner_data = db.query(User).filter(User.id == contact.owner_id).first()
-        
-        contacts.append({
-            "id": str(contact.id),
-            "property_id": str(contact.property_id),
-            "property_title": property_data.property_title if property_data else "Unknown",
-            "sender_id": str(contact.sender_id),
-            "sender_name": sender_data.full_name if sender_data else "Unknown",
-            "sender_email": sender_data.email if sender_data else "Unknown",
-            "owner_id": str(contact.owner_id),
-            "owner_name": owner_data.full_name if owner_data else "Unknown",
-            "owner_email": owner_data.email if owner_data else "Unknown",
-            "message": contact.message,
-            "status": contact.status.value if hasattr(contact.status, 'value') else str(contact.status),
-            "created_at": contact.created_at.isoformat() if contact.created_at else None
-        })
-    
-    return {
-        "contacts": contacts,
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "total_pages": (total + page_size - 1) // page_size
+        "total_pages": (total + page_size - 1) // page_size if total > 0 else 0
     }
 
 
@@ -682,6 +699,56 @@ def get_property_details(
         "amenities": [amenity.amenity_name for amenity in amenities],
         "house_rules": [rule.rule_text for rule in rules]
     }
+
+
+@router.post("/properties/{property_id}/notify-owner")
+def notify_property_owner(
+    property_id: str,
+    message: dict,
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Send a notification to the property owner about a report.
+    Also saves the message to the report's owner_notice field.
+    Protected route - requires admin authentication.
+    """
+    from app.models.property import Report
+    from datetime import datetime
+    
+    try:
+        # Get property and owner details
+        property_obj = db.query(Property).filter(Property.id == property_id).first()
+        if not property_obj:
+            raise HTTPException(status_code=404, detail="Property not found")
+        
+        owner = db.query(User).filter(User.id == property_obj.owner_id).first()
+        if not owner:
+            raise HTTPException(status_code=404, detail="Property owner not found")
+        
+        # Find the most recent report for this property and update owner_notice
+        report = db.query(Report).filter(
+            Report.property_id == property_id
+        ).order_by(Report.created_at.desc()).first()
+        
+        if report:
+            report.owner_notice = message.get('message', '')
+            report.updated_at = datetime.utcnow()
+            db.commit()
+        
+        # In a real application, you would send an email here
+        # For now, we'll just log it and return success
+        # TODO: Implement email notification
+        
+        return {
+            "success": True,
+            "message": "Notification sent to property owner",
+            "owner_email": owner.email,
+            "owner_name": owner.full_name
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to send notification: {str(e)}")
 
 
 # Report Actions

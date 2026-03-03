@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.database import get_db
@@ -6,23 +6,44 @@ from app.models.user import User
 from app.utils.dependencies import get_current_user
 
 
-def get_current_user_optional(db: Session = Depends(get_db)) -> Optional[User]:
+def get_current_user_optional(
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
     """
     Optional authentication - returns user if authenticated, None otherwise.
     Does not raise an error if user is not authenticated.
     """
-    from fastapi import Request
     from jose import JWTError, jwt
     from app.core.config import settings
     
+    # Try to get authorization header
     try:
-        from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-        from fastapi import Request
+        if not authorization:
+            return None
+            
+        # Extract token from "Bearer <token>" format
+        parts = authorization.split()
+        if len(parts) != 2 or parts[0].lower() != "bearer":
+            return None
         
-        # This is a simplified version - in production you'd want to properly extract the token
-        # For now, we'll just return None to make it optional
-        return None
-    except:
+        token = parts[1]
+        
+        # Decode JWT token
+        payload = jwt.decode(
+            token, 
+            settings.SECRET_KEY, 
+            algorithms=[settings.ALGORITHM]
+        )
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+            
+        # Get user from database
+        user = db.query(User).filter(User.id == user_id).first()
+        return user
+        
+    except (JWTError, Exception):
         return None
 
 

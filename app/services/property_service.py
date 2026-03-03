@@ -184,14 +184,33 @@ class PropertyService:
         return property_obj
     
     @staticmethod
-    def get_property_details(property_id: UUID, db: Session) -> tuple[Property, float, int]:
-        """Get property details with rating and review count."""
+    def get_property_details(property_id: UUID, db: Session, current_user: Optional[User] = None) -> tuple[Property, float, int]:
+        """Get property details with rating and review count.
+        
+        Args:
+            property_id: The property UUID
+            db: Database session
+            current_user: Optional authenticated user (for owner access to inactive properties)
+        
+        Returns:
+            Tuple of (property, avg_rating, total_reviews)
+        """
         from app.models.property import Review
         from sqlalchemy import func
         
         property_obj = db.query(Property).filter(Property.id == property_id).first()
         
         if not property_obj:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Property not found"
+            )
+        
+        # Check if user is the owner
+        is_owner = current_user and str(property_obj.owner_id) == str(current_user.id)
+        
+        # If not the owner, check if property is active
+        if not is_owner and not property_obj.is_active:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Property not found"
@@ -303,49 +322,6 @@ class PropertyService:
         # Soft delete - set is_active to False
         property_obj.is_active = False
         db.commit()
-
-    
-    @staticmethod
-    def get_property_details(property_id: UUID, db: Session):
-        """Get detailed property information with owner, reviews, etc."""
-        from app.models.property import Review
-        
-        # Query property with eager loading
-        property_obj = db.query(Property).filter(
-            and_(
-                Property.id == property_id,
-                Property.is_active == True
-            )
-        ).options(
-            joinedload(Property.owner),
-            joinedload(Property.images),
-            joinedload(Property.amenities),
-            joinedload(Property.house_rules)
-        ).first()
-        
-        if not property_obj:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Property not found or inactive"
-            )
-        
-        # Check if owner is verified
-        if not property_obj.owner.is_verified:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Property owner is not verified"
-            )
-        
-        # Calculate average rating and total reviews
-        rating_data = db.query(
-            func.avg(Review.rating).label('avg_rating'),
-            func.count(Review.id).label('total_reviews')
-        ).filter(Review.property_id == property_id).first()
-        
-        avg_rating = float(rating_data.avg_rating) if rating_data.avg_rating else 0.0
-        total_reviews = rating_data.total_reviews or 0
-        
-        return property_obj, avg_rating, total_reviews
 
     @staticmethod
     def track_property_view(property_id: UUID, user: User, db: Session) -> None:

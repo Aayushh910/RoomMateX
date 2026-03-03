@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, UploadFile, File, Form, Query
+from fastapi import APIRouter, Depends, status, UploadFile, File, Form, Query, Header, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -171,12 +171,13 @@ def get_my_properties(
 @router.get("/{property_id}", response_model=PropertyDetailsResponse)
 def get_property(
     property_id: UUID,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """
     Get detailed property information.
     
-    Public endpoint - no authentication required.
+    Public endpoint - authentication optional.
     
     Returns:
     - Full property details
@@ -184,11 +185,26 @@ def get_property(
     - Images, amenities, house rules
     - Average rating and total reviews
     
-    Only shows:
-    - Active properties (is_active=True)
-    - Properties from verified owners (owner.is_verified=True)
+    Access rules:
+    - Property owners can always view their own properties (even if inactive)
+    - Other users can only view active properties from verified owners
     """
-    property_obj, avg_rating, total_reviews = PropertyService.get_property_details(property_id, db)
+    # Pass current_user to service so it can check ownership
+    property_obj, avg_rating, total_reviews = PropertyService.get_property_details(
+        property_id, db, current_user
+    )
+    
+    # Additional check: if not owner, verify owner is verified
+    is_owner = current_user and str(property_obj.owner_id) == str(current_user.id)
+    if not is_owner:
+        # Get owner to check verification
+        owner = db.query(User).filter(User.id == property_obj.owner_id).first()
+        if not owner or not owner.is_verified:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Property not found"
+            )
+    
     return PropertyDetailsResponse.from_orm(property_obj, avg_rating, total_reviews)
 
 
@@ -229,17 +245,21 @@ def check_property_access(
 @router.post("/{property_id}/track-view", response_model=MessageResponse, status_code=status.HTTP_200_OK)
 def track_property_view(
     property_id: UUID,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """
     Track when a user views a property.
     
-    Requires authentication.
+    Optional authentication - only tracks if user is logged in.
     Updates or creates a recently viewed record.
     """
-    PropertyService.track_property_view(property_id, current_user, db)
-    return MessageResponse(message="Property view tracked")
+    # Only track if user is authenticated
+    if current_user:
+        PropertyService.track_property_view(property_id, current_user, db)
+        return MessageResponse(message="Property view tracked")
+    
+    return MessageResponse(message="View not tracked - authentication required")
 
 
 @router.put("/{property_id}", response_model=PropertyResponse)
@@ -342,6 +362,42 @@ def delete_property(
     
     return MessageResponse(message="Property deleted successfully")
 
+
+@router.put("/{property_id}/toggle-active")
+def toggle_property_active(
+    property_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Toggle property active/inactive status.
+    
+    Requirements:
+    - User must be the owner of the property
+    - Toggles the is_active field
+    """
+    from app.models.property import Property
+    from fastapi import HTTPException
+    
+    # Get property
+    property_obj = db.query(Property).filter(Property.id == property_id).first()
+    if not property_obj:
+        raise HTTPException(status_code=404, detail="Property not found")
+    
+    # Verify ownership
+    if str(property_obj.owner_id) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Not authorized to modify this property")
+    
+    # Toggle active status
+    property_obj.is_active = not property_obj.is_active
+    db.commit()
+    db.refresh(property_obj)
+    
+    return {
+        "success": True,
+        "message": f"Property {'activated' if property_obj.is_active else 'deactivated'} successfully",
+        "is_active": property_obj.is_active
+    }
 
 
 @router.get("/{property_id}/reviews", response_model=ReviewListResponse)

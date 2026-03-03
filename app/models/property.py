@@ -164,7 +164,10 @@ class Report(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     reason = Column(Text, nullable=False)
     status = Column(SQLEnum(ReportStatus), nullable=False, default=ReportStatus.pending)
-    admin_notice = Column(Text, nullable=True)  # Notice from admin to user
+    admin_notice = Column(Text, nullable=True)  # Notice from admin to reporter
+    owner_notice = Column(Text, nullable=True)  # Notice from admin to property owner
+    is_read = Column(Boolean, default=False, nullable=False)  # Whether reporter has read the notification
+    owner_is_read = Column(Boolean, default=False, nullable=False)  # Whether owner has read the notification
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     

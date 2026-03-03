@@ -5,6 +5,8 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+backend/__pycache__/
+backend/**/__pycache__/
 
 # ========================
 # Virtual Environment
@@ -52,9 +54,5 @@ htmlcov/
 # Uploads (we'll use later for images)
 # ========================
 uploads/
-
-# ========================
-# Project specific ignores
-# ========================
 alembic
 alembic.ini

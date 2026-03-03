@@ -11,8 +11,8 @@ class EmailService:
     """Service for sending emails via SMTP."""
     
     @staticmethod
-    def send_email(to_email: str, subject: str, html_body: str) -> bool:
-        """Send an email using SMTP."""
+    def send_email(to_email: str, subject: str, html_body: str, reply_to: str = None) -> bool:
+        """Send an email using SMTP with optional Reply-To header."""
         # Development mode - just log the email
         if settings.EMAIL_DEV_MODE:
             logger.info("=" * 60)
@@ -20,12 +20,16 @@ class EmailService:
             logger.info("=" * 60)
             logger.info(f"To: {to_email}")
             logger.info(f"Subject: {subject}")
+            if reply_to:
+                logger.info(f"Reply-To: {reply_to}")
             logger.info("=" * 60)
             print("\n" + "=" * 60)
             print("📧 EMAIL SENT (DEV MODE)")
             print("=" * 60)
             print(f"To: {to_email}")
             print(f"Subject: {subject}")
+            if reply_to:
+                print(f"Reply-To: {reply_to}")
             print("=" * 60)
             return True
         
@@ -41,6 +45,10 @@ class EmailService:
             message["Subject"] = subject
             message["From"] = settings.EMAIL_FROM
             message["To"] = to_email
+            
+            # Add Reply-To header if provided
+            if reply_to:
+                message["Reply-To"] = reply_to
             
             # Attach HTML content
             html_part = MIMEText(html_body, "html")
