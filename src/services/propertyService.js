@@ -113,6 +113,12 @@ export const propertyService = {
     return response.data;
   },
 
+  // Toggle property active/inactive status
+  togglePropertyActive: async (id) => {
+    const response = await api.put(`/properties/${id}/toggle-active`);
+    return response.data;
+  },
+
   // Contact property owner
   contactOwner: async (propertyId, message) => {
     const response = await api.post(`/properties/${propertyId}/contact`, {

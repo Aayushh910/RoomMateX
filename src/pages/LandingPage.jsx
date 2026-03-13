@@ -79,13 +79,18 @@ export const LandingPage = () => {
                 <div className="flex justify-between h-14 items-center">
                   {/* Logo */}
                   <Link to="/" className="flex items-center gap-2.5 group">
-                    <div className="w-8 h-8 rounded-xl bg-gray-900 dark:bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 transform group-hover:scale-110 transition-all duration-300 group-hover:shadow-indigo-500/40">
-                      <svg className="w-4 h-4 text-white transform group-hover:rotate-12 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                      </svg>
-                    </div>
-                    <span className="text-lg font-bold text-gray-900 dark:text-white tracking-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-all duration-300">
-                      RoomMateX
+                    <img 
+                      src="/logos/logocrop.png" 
+                      alt="RoomMateX Logo" 
+                      className="w-10 h-10 rounded-[18px] transform group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <span className="text-2xl font-bold tracking-tight transition-all duration-300">
+                      <span className="text-black dark:text-black group-hover:text-gray-800">
+                        Room
+                      </span>
+                      <span className="text-[#4858AF] dark:text-[#4858AF] group-hover:text-[#3d4a8f]">
+                        MateX
+                      </span>
                     </span>
                   </Link>
 
@@ -356,9 +361,17 @@ export const LandingPage = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-white/90 backdrop-blur-xl shadow-xl shadow-blue-900/5 border border-white/50 rounded-2xl p-6 md:p-8">
               <div className="grid md:grid-cols-4 gap-8">
                 <div className="col-span-1">
-                  <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-primary-600 to-indigo-600 bg-clip-text text-transparent">
-                    RoomMateX
-                  </h3>
+                  <div className="flex items-center gap-2 mb-4">
+                    <img 
+                      src="/logos/logocrop.png" 
+                      alt="RoomMateX Logo" 
+                      className="w-10 h-10 rounded-[18px] transform hover:scale-110 transition-all duration-300"
+                    />
+                    <h3 className="text-2xl font-bold">
+                      <span className="text-black">Room</span>
+                      <span className="text-[#4858AF]">MateX</span>
+                    </h3>
+                  </div>
                   <p className="text-gray-600 leading-relaxed text-sm">
                     Your trusted partner for finding the perfect room and compatible roommates. Making housing simple and safe.
                   </p>

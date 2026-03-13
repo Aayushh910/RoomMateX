@@ -1,14 +1,37 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Bell } from 'lucide-react';
 import { getImageUrl } from '../utils/imageUtils';
+import { notificationService } from '../services/notificationService';
+import { NotificationsModal } from './modal/NotificationsModal';
 
 export const Navbar = () => {
   const { theme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount();
+      // Poll for new notifications every 30 seconds
+      const interval = setInterval(fetchUnreadCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const data = await notificationService.getUnreadCount();
+      setUnreadCount(data.unread_count);
+    } catch (error) {
+      console.error('Failed to fetch unread count:', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -22,13 +45,14 @@ export const Navbar = () => {
           <div className="flex justify-between h-14 items-center">
             {/* Logo */}
             <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white shadow-md shadow-blue-500/30 transform group-hover:scale-110 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-blue-500/40">
-                <svg className="w-4 h-4 text-white transform group-hover:rotate-12 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-              </div>
-              <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight group-hover:from-blue-700 group-hover:to-purple-700 transition-all duration-300">
-                RoomMateX
+              <img 
+                src="/logos/logocrop.svg" 
+                alt="RoomMateX Logo" 
+                className="w-8 h-8 rounded-full transform group-hover:scale-110 transition-all duration-300"
+              />
+              <span className="text-lg font-bold tracking-tight transition-all duration-300">
+                <span className="text-black group-hover:text-gray-800">Room</span>
+                <span className="text-[#4858AF] group-hover:text-[#3d4a8f]">MateX</span>
               </span>
             </Link>
 
@@ -54,6 +78,20 @@ export const Navbar = () => {
             <div className="flex items-center gap-3">
               {user ? (
                 <>
+                  {/* Notification Bell */}
+                  <button
+                    onClick={() => setShowNotificationsModal(true)}
+                    className="relative p-2 rounded-xl hover:bg-gray-100 transition-colors group"
+                    title="Notifications"
+                  >
+                    <Bell className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  
                   <Link to="/profile" className="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 group shadow-sm hover:shadow-md">
                     {user.profile_photo ? (
                       <img 
@@ -135,6 +173,13 @@ export const Navbar = () => {
           </div>
         )}
       </nav>
+
+      {/* Notifications Modal */}
+      <NotificationsModal 
+        isOpen={showNotificationsModal} 
+        onClose={() => setShowNotificationsModal(false)}
+        onUnreadCountChange={fetchUnreadCount}
+      />
     </div>
   );
 };

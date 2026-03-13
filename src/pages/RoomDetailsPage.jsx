@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { Navbar } from '../components/Navbar';
 import { propertyService } from '../services/propertyService';
 import { reviewService } from '../services/reviewService';
@@ -11,6 +12,7 @@ export const RoomDetailsPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { showSuccess, showError } = useToast();
     
     const [room, setRoom] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -102,7 +104,7 @@ export const RoomDetailsPage = () => {
             }
         } catch (err) {
             console.error('Failed to toggle wishlist:', err);
-            alert('Failed to update wishlist. Please try again.');
+            showError('Failed to update wishlist. Please try again.');
         }
     };
 
@@ -114,7 +116,7 @@ export const RoomDetailsPage = () => {
         }
 
         if (!reportReason) {
-            alert('Please select a reason');
+            showError('Please select a reason');
             return;
         }
 
@@ -124,13 +126,13 @@ export const RoomDetailsPage = () => {
                 ? `${reportReason}: ${reportDescription}` 
                 : reportReason;
             await propertyService.reportProperty(id, reason);
-            alert('Property reported successfully. We will review it.');
+            showSuccess('Property reported successfully. We will review it.');
             setShowReportModal(false);
             setReportReason('');
             setReportDescription('');
         } catch (err) {
             console.error('Failed to report property:', err);
-            alert('Failed to report property. Please try again.');
+            showError('Failed to report property. Please try again.');
         } finally {
             setSubmitting(false);
         }
@@ -144,7 +146,7 @@ export const RoomDetailsPage = () => {
         }
 
         if (reviewRating === 0) {
-            alert('Please select a rating');
+            showError('Please select a rating');
             return;
         }
 
@@ -162,10 +164,10 @@ export const RoomDetailsPage = () => {
             setShowReviewModal(false);
             setReviewRating(0);
             setReviewText('');
-            alert('Review submitted successfully!');
+            showSuccess('Review submitted successfully!');
         } catch (err) {
             console.error('Failed to submit review:', err);
-            alert('Failed to submit review. Please try again.');
+            showError('Failed to submit review. Please try again.');
         } finally {
             setSubmitting(false);
         }
@@ -411,6 +413,55 @@ export const RoomDetailsPage = () => {
                                         <p className="text-gray-500 text-sm capitalize">{room.owner.role.replace('_', ' ')}</p>
                                     </div>
                                 </div>
+
+                                {/* Owner Actions - Show only if current user is the owner */}
+                                {user && room.owner && (String(room.owner.id) === String(user.id)) && (
+                                    <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <p className="text-sm font-semibold text-blue-900">You own this property</p>
+                                        </div>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <span className="text-sm text-blue-700">Status:</span>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                                room.is_active 
+                                                    ? 'bg-green-100 text-green-700' 
+                                                    : 'bg-gray-100 text-gray-700'
+                                            }`}>
+                                                {room.is_active ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        const response = await propertyService.togglePropertyActive(id);
+                                                        setRoom(prev => ({ ...prev, is_active: response.is_active }));
+                                                        showSuccess(response.message);
+                                                    } catch (err) {
+                                                        console.error('Failed to toggle property status:', err);
+                                                        showError('Failed to update property status. Please try again.');
+                                                    }
+                                                }}
+                                                className={`flex-1 px-3 py-2 text-center text-sm font-bold rounded-lg transition-colors ${
+                                                    room.is_active
+                                                        ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                                                        : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                                }`}
+                                            >
+                                                {room.is_active ? 'Deactivate' : 'Activate'}
+                                            </button>
+                                            <Link
+                                                to={`/edit-room/${id}`}
+                                                className="flex-1 px-3 py-2 text-center bg-blue-100 text-blue-700 text-sm font-bold rounded-lg hover:bg-blue-200 transition-colors"
+                                            >
+                                                Edit
+                                            </Link>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="space-y-3">
                                     <button

@@ -130,20 +130,14 @@ export const adminService = {
   },
 
   // Get all reports
-  getReports: async (page = 1, pageSize = 20) => {
+  getReports: async (page = 1, pageSize = 20, filters = {}) => {
     const token = localStorage.getItem('admin_access_token');
-    const response = await api.get(`/admin/reports?page=${page}&page_size=${pageSize}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+      ...filters
     });
-    return response.data;
-  },
-
-  // Get all contact requests
-  getContactRequests: async (page = 1, pageSize = 20) => {
-    const token = localStorage.getItem('admin_access_token');
-    const response = await api.get(`/admin/contact-requests?page=${page}&page_size=${pageSize}`, {
+    const response = await api.get(`/admin/reports?${params}`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -159,6 +153,19 @@ export const adminService = {
       params.append('admin_notice', adminNotice);
     }
     const response = await api.put(`/admin/reports/${reportId}/status?${params}`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  },
+
+  // Notify property owner about report
+  notifyPropertyOwner: async (propertyId, message) => {
+    const token = localStorage.getItem('admin_access_token');
+    const response = await api.post(`/admin/properties/${propertyId}/notify-owner`, {
+      message
+    }, {
       headers: {
         Authorization: `Bearer ${token}`
       }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { GUJARAT_CITIES } from '../constants/cities';
 import { propertyService } from '../services/propertyService';
 
@@ -9,6 +10,7 @@ export const EditRoomPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { showSuccess, showError } = useToast();
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
@@ -58,7 +60,7 @@ export const EditRoomPage = () => {
             });
         } catch (error) {
             console.error('Failed to fetch property:', error);
-            alert('Failed to load property data');
+            showError('Failed to load property data');
             navigate('/dashboard');
         } finally {
             setLoading(false);
@@ -112,11 +114,11 @@ export const EditRoomPage = () => {
             };
 
             await propertyService.updateProperty(id, propertyData);
-            alert('Property updated successfully!');
+            showSuccess('Property updated successfully!');
             navigate('/dashboard');
         } catch (error) {
             console.error('Failed to update property:', error);
-            alert(error.response?.data?.detail || 'Failed to update property. Please try again.');
+            showError(error.response?.data?.detail || 'Failed to update property. Please try again.');
         } finally {
             setSubmitting(false);
         }

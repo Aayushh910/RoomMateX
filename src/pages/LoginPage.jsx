@@ -97,12 +97,19 @@ export const LoginPage = () => {
         <div className="w-full max-w-md bg-white p-6 rounded-3xl border border-gray-200 shadow-xl">
           {/* Brand/Logo */}
           <Link to="/" className="inline-flex items-center gap-2 mb-6 group animate-slide-up">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-primary-500/20 group-hover:scale-110 transition-transform duration-300">
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
-            </div>
-            <span className="text-2xl font-bold text-gray-900 tracking-tight">RoomMateX</span>
+            <img 
+              src="public/logos/logocrop.png" 
+              alt="RoomMateX Logo" 
+              className="w-10 h-10 rounded-[18px] transform group-hover:scale-110 transition-transform duration-300"
+            />
+             <span className="text-2xl font-bold tracking-tight transition-all duration-300">
+                  <span className="text-black dark:text-black group-hover:text-gray-800">
+                        Room
+                  </span>
+                  <span className="text-[#4858AF] dark:text-[#4858AF] group-hover:text-[#3d4a8f]">
+                        MateX
+                </span>
+             </span>
           </Link>
 
           {/* Form Header */}

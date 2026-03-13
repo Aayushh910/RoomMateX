@@ -2,15 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
+import { useToast } from '../context/ToastContext';
 import { GUJARAT_CITIES } from '../constants/cities';
 import { dashboardService } from '../services/dashboardService';
 import { userService } from '../services/userService';
 import { getImageUrl } from '../utils/imageUtils';
-import { ImageCropModal } from '../components/ui/ImageCropModal';
+import { ImageCropModal } from '../components/modal/ImageCropModal';
 
 export const ProfilePage = () => {
     const { user, updateUser, setUser } = useAuth();
     const navigate = useNavigate();
+    const { showError } = useToast();
     const fileInputRef = useRef(null);
     const [activeTab, setActiveTab] = useState('personal');
     const [isEditing, setIsEditing] = useState(false);
@@ -136,7 +138,7 @@ export const ProfilePage = () => {
             // Optional: Show success toast
         } else {
             // Show error
-            alert(result.error || 'Failed to update profile');
+            showError(result.error || 'Failed to update profile');
         }
     };
 
@@ -167,13 +169,13 @@ export const ProfilePage = () => {
         // Validate file type
         const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
         if (!validTypes.includes(file.type)) {
-            alert('Please upload a valid image file (JPG, JPEG, or PNG)');
+            showError('Please upload a valid image file (JPG, JPEG, or PNG)');
             return;
         }
 
         // Validate file size (5MB)
         if (file.size > 5 * 1024 * 1024) {
-            alert('Image size must be less than 5MB');
+            showError('Image size must be less than 5MB');
             return;
         }
 
@@ -203,7 +205,7 @@ export const ProfilePage = () => {
             setUser(updatedUser);
         } catch (error) {
             console.error('Failed to upload photo:', error);
-            alert(error.response?.data?.detail || 'Failed to upload profile photo');
+            showError(error.response?.data?.detail || 'Failed to upload profile photo');
         } finally {
             setIsUploadingPhoto(false);
             setSelectedImage(null);

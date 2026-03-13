@@ -4,10 +4,12 @@ import { Navbar } from '../components/Navbar';
 import { wishlistService } from '../services/wishlistService';
 import { dashboardService } from '../services/dashboardService';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { getImageUrl } from '../utils/imageUtils';
 
 export const WishlistPage = () => {
     const { user } = useAuth();
+    const { showError } = useToast();
     const [wishlist, setWishlist] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -41,7 +43,7 @@ export const WishlistPage = () => {
             setWishlist(prev => prev.filter(item => item.id !== propertyId));
         } catch (err) {
             console.error('Failed to remove from wishlist:', err);
-            alert('Failed to remove from wishlist. Please try again.');
+            showError('Failed to remove from wishlist. Please try again.');
         }
     };
 
