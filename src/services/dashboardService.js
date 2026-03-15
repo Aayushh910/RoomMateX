@@ -25,16 +25,14 @@ export const dashboardService = {
     return response.data;
   },
 
-  // Get contact requests
+  // Get contact requests (removed - feature not implemented)
   getRequests: async () => {
-    const response = await api.get('/dashboard/requests');
-    return response.data;
+    return [];
   },
 
-  // Get recently viewed properties
+  // Get recently viewed properties (removed - feature not implemented)
   getRecentlyViewed: async () => {
-    const response = await api.get('/dashboard/recently-viewed');
-    return response.data;
+    return [];
   },
 
   // Get total available rooms count
@@ -43,21 +41,18 @@ export const dashboardService = {
     return response.data.total || 0;
   },
 
-  // Get all contact requests (including accepted/rejected) for modal
+  // Get all contact requests (removed - feature not implemented)
   getAllRequests: async () => {
-    const response = await api.get('/dashboard/all-requests');
-    return response.data;
+    return [];
   },
 
-  // Accept contact request
+  // Accept contact request (removed - feature not implemented)
   acceptRequest: async (requestId) => {
-    const response = await api.post(`/dashboard/requests/${requestId}/accept`);
-    return response.data;
+    return { message: 'Feature not available' };
   },
 
-  // Reject contact request
+  // Reject contact request (removed - feature not implemented)
   rejectRequest: async (requestId) => {
-    const response = await api.post(`/dashboard/requests/${requestId}/reject`);
-    return response.data;
+    return { message: 'Feature not available' };
   },
 };

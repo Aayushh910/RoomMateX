@@ -35,7 +35,6 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       localStorage.setItem('roomatex_user', JSON.stringify(userData));
     } catch (error) {
-      console.error('Failed to refresh user:', error);
       // If token is invalid, clear storage
       if (error.response?.status === 401) {
         logout();

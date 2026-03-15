@@ -119,42 +119,11 @@ export const propertyService = {
     return response.data;
   },
 
-  // Contact property owner
-  contactOwner: async (propertyId, message) => {
-    const response = await api.post(`/properties/${propertyId}/contact`, {
-      message: message || undefined,
-    });
-    return response.data;
-  },
-
   // Report property
   reportProperty: async (propertyId, reason) => {
     const response = await api.post(`/properties/${propertyId}/report`, {
       reason,
     });
     return response.data;
-  },
-
-  // Track property view
-  trackPropertyView: async (propertyId) => {
-    try {
-      const response = await api.post(`/properties/${propertyId}/track-view`);
-      return response.data;
-    } catch (error) {
-      // Silently fail if tracking fails (non-critical)
-      console.error('Failed to track view:', error);
-      return null;
-    }
-  },
-
-  // Check if user has access to owner contact details
-  checkPropertyAccess: async (propertyId) => {
-    try {
-      const response = await api.get(`/properties/${propertyId}/check-access`);
-      return response.data;
-    } catch (error) {
-      // User not authenticated or no access
-      return { has_access: false };
-    }
   },
 };
