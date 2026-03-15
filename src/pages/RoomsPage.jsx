@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
-import { cities, amenitiesList } from '../data/mockData';
+import { GUJARAT_CITIES } from '../constants/cities';
+import { AMENITIES_LIST } from '../constants/amenities';
 import { propertyService } from '../services/propertyService';
 import { getImageUrl } from '../utils/imageUtils';
 
@@ -41,7 +42,6 @@ export const RoomsPage = () => {
             const response = await propertyService.getProperties(apiFilters);
             setRooms(response.data || []);
         } catch (err) {
-            console.error('Failed to fetch properties:', err);
             setError('Failed to load properties. Please try again.');
             setRooms([]);
         } finally {
@@ -112,7 +112,7 @@ export const RoomsPage = () => {
                                     className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none bg-white"
                                 >
                                     <option value="">All Cities</option>
-                                    {cities.map(city => <option key={city} value={city}>{city}</option>)}
+                                    {GUJARAT_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
                                 </select>
                             </div>
 
@@ -172,7 +172,7 @@ export const RoomsPage = () => {
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Amenities</label>
                                 <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                                    {amenitiesList.map((amenity) => (
+                                    {AMENITIES_LIST.map((amenity) => (
                                         <label key={amenity} className="flex items-center gap-2 cursor-pointer">
                                             <input
                                                 type="checkbox"

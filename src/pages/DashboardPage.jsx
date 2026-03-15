@@ -47,7 +47,7 @@ export const DashboardPage = () => {
             setWishlistRooms(wishlistData);
             setRecommendedRooms(recommendedData);
         } catch (err) {
-            console.error('Failed to fetch dashboard data:', err);
+            // Silently handle dashboard data fetch errors
         } finally {
             setLoading(false);
         }
@@ -74,7 +74,6 @@ export const DashboardPage = () => {
             setSummary(summaryData);
             showSuccess('Property deleted successfully');
         } catch (err) {
-            console.error('Failed to delete property:', err);
             showError('Failed to delete property. Please try again.');
         } finally {
             setShowDeleteConfirm(false);
@@ -91,7 +90,6 @@ export const DashboardPage = () => {
             ));
             showSuccess(response.message);
         } catch (err) {
-            console.error('Failed to toggle property status:', err);
             showError('Failed to update property status. Please try again.');
         }
     };

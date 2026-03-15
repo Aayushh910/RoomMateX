@@ -8,6 +8,7 @@ import { dashboardService } from '../services/dashboardService';
 import { userService } from '../services/userService';
 import { getImageUrl } from '../utils/imageUtils';
 import { ImageCropModal } from '../components/modal/ImageCropModal';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 export const ProfilePage = () => {
     const { user, updateUser, setUser } = useAuth();
@@ -23,16 +24,7 @@ export const ProfilePage = () => {
     const [showCropModal, setShowCropModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
     
-    const [twoFactor, setTwoFactor] = useState(false);
-    const [notifications, setNotifications] = useState({
-        emailNotifications: true,
-        pushNotifications: true,
-        marketingMessages: false
-    });
 
-    const toggleNotification = (key) => {
-        setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
-    };
 
     // Form State
     const [formData, setFormData] = useState({
@@ -88,7 +80,7 @@ export const ProfilePage = () => {
                 setListingsCount(summary.my_listings_count || 0);
                 setWishlistCount(summary.wishlist_count || 0);
             } catch (error) {
-                console.error('Failed to fetch counts:', error);
+                // Silently handle count fetch errors
             } finally {
                 setIsLoadingCounts(false);
             }
@@ -204,7 +196,6 @@ export const ProfilePage = () => {
             const updatedUser = await userService.uploadProfilePhoto(croppedFile);
             setUser(updatedUser);
         } catch (error) {
-            console.error('Failed to upload photo:', error);
             showError(error.response?.data?.detail || 'Failed to upload profile photo');
         } finally {
             setIsUploadingPhoto(false);
@@ -244,7 +235,7 @@ export const ProfilePage = () => {
                                 >
                                     {isUploadingPhoto ? (
                                         <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                                            <LoadingSpinner size="md" />
                                         </div>
                                     ) : user?.profile_photo ? (
                                         <img src={getImageUrl(user.profile_photo)} alt={user.full_name} className="w-full h-full object-cover" />

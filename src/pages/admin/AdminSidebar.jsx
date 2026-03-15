@@ -14,16 +14,13 @@ export const AdminSidebar = ({ sidebarOpen, setSidebarOpen, activeSection, setAc
       <div className="px-6 py-4 border-b border-gray-200 h-[88px] flex items-center">
         <div className="flex items-center gap-3">
           <img 
-            src="public/logos/logocrop.png" 
+            src="/logos/logocrop.png" 
             alt="RoomMateX Logo" 
-            className="w-10 h-10 rounded-full transform group-hover:scale-110 transition-transform duration-300"
+            className="w-10 h-10 rounded-[18px]"
           />
           {sidebarOpen && (
             <div>
-              <h1 className="text-lg font-bold">
-                <span className="text-black">Room</span>
-                <span className="text-[#4858AF]">MateX</span>
-              </h1>
+              <h1 className="text-lg font-bold text-gray-900">RoomMateX</h1>
               <p className="text-xs text-gray-500">Admin Panel</p>
             </div>
           )}

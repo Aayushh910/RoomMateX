@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { GUJARAT_CITIES } from '../constants/cities';
 import { propertyService } from '../services/propertyService';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 export const EditRoomPage = () => {
     const { id } = useParams();
@@ -59,7 +60,6 @@ export const EditRoomPage = () => {
                 description: property.description || ''
             });
         } catch (error) {
-            console.error('Failed to fetch property:', error);
             showError('Failed to load property data');
             navigate('/dashboard');
         } finally {
@@ -117,7 +117,6 @@ export const EditRoomPage = () => {
             showSuccess('Property updated successfully!');
             navigate('/dashboard');
         } catch (error) {
-            console.error('Failed to update property:', error);
             showError(error.response?.data?.detail || 'Failed to update property. Please try again.');
         } finally {
             setSubmitting(false);
@@ -129,10 +128,7 @@ export const EditRoomPage = () => {
             <div className="min-h-screen flex flex-col pt-32">
                 <Navbar />
                 <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-                        <p className="text-gray-500">Loading property...</p>
-                    </div>
+                <LoadingSpinner size="lg" text="Loading property..." />
                 </div>
             </div>
         );
@@ -150,28 +146,46 @@ export const EditRoomPage = () => {
     ];
 
     return (
-        <div className="min-h-screen flex flex-col pt-32 pb-12">
+        <div className="min-h-screen flex flex-col pt-20 pb-12 bg-gray-50">
             <Navbar />
 
-            <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
                 <div className="mb-8">
                     <button
                         onClick={() => navigate('/dashboard')}
-                        className="text-gray-500 hover:text-gray-900 mb-4 inline-flex items-center gap-2"
+                        className="text-gray-600 hover:text-primary-600 mb-6 inline-flex items-center gap-2 font-semibold transition-colors group"
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                         Back to Dashboard
                     </button>
-                    <h1 className="text-3xl font-bold text-gray-900">Edit Property</h1>
-                    <p className="text-gray-500 mt-2">Update your property listing details</p>
+                    <div className="flex items-center gap-4 mb-2">
+                        <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center shadow-lg">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 className="text-4xl font-bold text-gray-900">Edit Property</h1>
+                            <p className="text-gray-600 mt-1">Update your property listing details</p>
+                        </div>
+                    </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-8">
+                <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
                     {/* Basic Information */}
-                    <div className="mb-8">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Basic Information</h2>
+                    <div className="bg-primary-50 px-8 py-6 border-b border-gray-100">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900">Basic Information</h2>
+                        </div>
+                    </div>
+                    <div className="px-8 py-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -242,8 +256,17 @@ export const EditRoomPage = () => {
                     </div>
 
                     {/* Pricing & Availability */}
-                    <div className="mb-8">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Pricing & Availability</h2>
+                    <div className="bg-primary-50 px-8 py-6 border-y border-gray-100">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900">Pricing & Availability</h2>
+                        </div>
+                    </div>
+                    <div className="px-8 py-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -294,8 +317,17 @@ export const EditRoomPage = () => {
                     </div>
 
                     {/* Tenant Preference */}
-                    <div className="mb-8">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Tenant Preference</h2>
+                    <div className="bg-primary-50 px-8 py-6 border-y border-gray-100">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900">Tenant Preference</h2>
+                        </div>
+                    </div>
+                    <div className="px-8 py-6">
                         <select
                             name="genderPreference"
                             value={formData.genderPreference}
@@ -311,8 +343,17 @@ export const EditRoomPage = () => {
                     </div>
 
                     {/* Amenities */}
-                    <div className="mb-8">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Amenities</h2>
+                    <div className="bg-primary-50 px-8 py-6 border-y border-gray-100">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900">Amenities</h2>
+                        </div>
+                    </div>
+                    <div className="px-8 py-6">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {amenitiesList.map(amenity => (
                                 <label key={amenity.value} className="flex items-center gap-2 cursor-pointer">
@@ -329,8 +370,17 @@ export const EditRoomPage = () => {
                     </div>
 
                     {/* Description */}
-                    <div className="mb-8">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Description</h2>
+                    <div className="bg-primary-50 px-8 py-6 border-y border-gray-100">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                                </svg>
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900">Description</h2>
+                        </div>
+                    </div>
+                    <div className="px-8 py-6">
                         <textarea
                             name="description"
                             value={formData.description}
@@ -342,8 +392,17 @@ export const EditRoomPage = () => {
                     </div>
 
                     {/* House Rules */}
-                    <div className="mb-8">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">House Rules</h2>
+                    <div className="bg-primary-50 px-8 py-6 border-y border-gray-100">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900">House Rules</h2>
+                        </div>
+                    </div>
+                    <div className="px-8 py-6">
                         <textarea
                             name="rules"
                             value={formData.rules}
@@ -355,20 +414,28 @@ export const EditRoomPage = () => {
                     </div>
 
                     {/* Submit Button */}
-                    <div className="flex gap-4">
+                    <div className="bg-gray-50 px-8 py-6 border-t border-gray-100 flex gap-4">
                         <button
                             type="button"
                             onClick={() => navigate('/dashboard')}
-                            className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                            className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-white hover:border-gray-400 transition-all shadow-sm"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 px-6 py-4 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {submitting ? 'Updating...' : 'Update Property'}
+                            {submitting ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Updating...
+                                </span>
+                            ) : 'Update Property'}
                         </button>
                     </div>
                 </form>

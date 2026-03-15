@@ -55,7 +55,6 @@ export const ContactPage = () => {
                 setFormData({ name: '', email: '', subject: '', message: '' });
             }
         } catch (error) {
-            console.error('Failed to send message:', error);
             setStatus('error');
             setTimeout(() => setStatus('idle'), 3000);
         }
@@ -129,7 +128,7 @@ export const ContactPage = () => {
                                             </div>
                                             <div className="flex items-start gap-2">
                                                 <span className="text-blue-600 font-bold mt-0.5">2.</span>
-                                                <p><strong className="text-gray-900">Direct Contact:</strong> Email us directly at <a href="mailto:roommatex0help@gmail.com" className="text-blue-600 font-semibold hover:underline">roommatex0help@gmail.com</a> or call us at <a href="tel:+919876543210" className="text-blue-600 font-semibold hover:underline">+91 987 654 3210</a>.</p>
+                                                <p><strong className="text-gray-900">Direct Contact:</strong> Email us directly at <a href="mailto:roommatex0help@gmail.com" className="text-blue-600 font-semibold hover:underline">roommatex0help@gmail.com</a> or call us at <a href="tel:+918200256660" className="text-blue-600 font-semibold hover:underline">+91 82002 56660</a>.</p>
                                             </div>
                                             <div className="flex items-start gap-2">
                                                 <span className="text-blue-600 font-bold mt-0.5">3.</span>
@@ -160,13 +159,13 @@ export const ContactPage = () => {
                                         </div>
                                     </a>
                                     
-                                    <a href="tel:+919876543210" className="flex items-center gap-4 p-3 rounded-xl hover:bg-green-50 transition-colors group">
+                                    <a href="tel:+918200256660" className="flex items-center gap-4 p-3 rounded-xl hover:bg-green-50 transition-colors group">
                                         <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center text-green-600 group-hover:bg-green-100 transition-colors">
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                                         </div>
                                         <div className="flex-1">
                                             <p className="text-xs font-bold text-gray-500 uppercase">Call us</p>
-                                            <p className="text-sm text-gray-900 font-semibold group-hover:text-green-600 transition-colors">+91 987 654 3210</p>
+                                            <p className="text-sm text-gray-900 font-semibold group-hover:text-green-600 transition-colors">+91 82002 56660</p>
                                         </div>
                                     </a>
                                     
@@ -365,7 +364,7 @@ export const ContactPage = () => {
                                                         Email Us
                                                     </a>
                                                     <a 
-                                                        href="tel:+919876543210"
+                                                        href="tel:+918200256660"
                                                         className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-semibold hover:bg-green-100 transition-colors"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

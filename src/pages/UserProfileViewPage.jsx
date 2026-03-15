@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Navbar } from '../components/Navbar';
 import api from '../services/api';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 import { getImageUrl } from '../utils/imageUtils';
 
 export const UserProfileViewPage = () => {
@@ -23,7 +24,6 @@ export const UserProfileViewPage = () => {
             const response = await api.get(`/users/${id}`);
             setUser(response.data);
         } catch (err) {
-            console.error('Failed to fetch user profile:', err);
             setError('Failed to load user profile.');
         } finally {
             setLoading(false);
@@ -35,10 +35,7 @@ export const UserProfileViewPage = () => {
             <div className="min-h-screen flex flex-col pt-32">
                 <Navbar />
                 <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-                        <p className="text-gray-500">Loading profile...</p>
-                    </div>
+                <LoadingSpinner size="lg" text="Loading profile..." />
                 </div>
             </div>
         );

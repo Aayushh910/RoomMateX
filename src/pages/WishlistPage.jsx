@@ -30,7 +30,6 @@ export const WishlistPage = () => {
             const data = await dashboardService.getWishlist();
             setWishlist(data || []);
         } catch (err) {
-            console.error('Failed to fetch wishlist:', err);
             setError('Failed to load wishlist.');
         } finally {
             setLoading(false);
@@ -42,7 +41,6 @@ export const WishlistPage = () => {
             await wishlistService.removeFromWishlist(propertyId);
             setWishlist(prev => prev.filter(item => item.id !== propertyId));
         } catch (err) {
-            console.error('Failed to remove from wishlist:', err);
             showError('Failed to remove from wishlist. Please try again.');
         }
     };

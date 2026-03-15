@@ -82,13 +82,13 @@ export const LandingPage = () => {
                     <img 
                       src="/logos/logocrop.png" 
                       alt="RoomMateX Logo" 
-                      className="w-10 h-10 rounded-[18px] transform group-hover:scale-110 transition-transform duration-300"
+                      className="w-8 h-8 rounded-[18px] transform group-hover:scale-110 transition-all duration-300"
                     />
                     <span className="text-2xl font-bold tracking-tight transition-all duration-300">
-                      <span className="text-black dark:text-black group-hover:text-gray-800">
+                      <span className="text-black dark:text-white group-hover:text-gray-900">
                         Room
                       </span>
-                      <span className="text-[#4858AF] dark:text-[#4858AF] group-hover:text-[#3d4a8f]">
+                      <span className="text-blue-600 dark:text-blue-400 group-hover:text-blue-700">
                         MateX
                       </span>
                     </span>
@@ -365,11 +365,10 @@ export const LandingPage = () => {
                     <img 
                       src="/logos/logocrop.png" 
                       alt="RoomMateX Logo" 
-                      className="w-10 h-10 rounded-[18px] transform hover:scale-110 transition-all duration-300"
+                      className="w-8 h-8 rounded-[18px] transform group-hover:scale-110 transition-all duration-300"
                     />
-                    <h3 className="text-2xl font-bold">
-                      <span className="text-black">Room</span>
-                      <span className="text-[#4858AF]">MateX</span>
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-indigo-600 bg-clip-text text-transparent">
+                      RoomMateX
                     </h3>
                   </div>
                   <p className="text-gray-600 leading-relaxed text-sm">

@@ -98,7 +98,7 @@ export const LoginPage = () => {
           {/* Brand/Logo */}
           <Link to="/" className="inline-flex items-center gap-2 mb-6 group animate-slide-up">
             <img 
-              src="public/logos/logocrop.png" 
+              src="/logos/logocrop.png" 
               alt="RoomMateX Logo" 
               className="w-10 h-10 rounded-[18px] transform group-hover:scale-110 transition-transform duration-300"
             />
@@ -325,18 +325,11 @@ export const LoginPage = () => {
 
       {/* Right Side: Themed/Animated Content */}
       <div className="hidden lg:flex relative overflow-hidden bg-gray-900 items-center justify-center p-12 h-screen">
-        {/* Landing Page Theme Background */}
+        {/* Simplified Background */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[70%] h-[70%] rounded-full bg-purple-500/10 blur-[120px] animate-blob"></div>
           <div className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] rounded-full bg-blue-500/10 blur-[120px] animate-blob animation-delay-2000"></div>
           <div className="absolute bottom-[-20%] left-[20%] w-[70%] h-[70%] rounded-full bg-indigo-500/10 blur-[120px] animate-blob animation-delay-4000"></div>
-          <div className="absolute inset-0 w-full h-full bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:60px_60px]"></div>
-
-          {/* Floating Boxes */}
-          <div className="floating-box w-16 h-16 rounded-lg opacity-20" style={{ left: '15%', animationDuration: '22s', background: 'white' }}></div>
-          <div className="floating-box w-24 h-24 rounded-2xl opacity-10" style={{ left: '65%', animationDuration: '28s', background: 'white' }}></div>
-          <div className="floating-box w-12 h-12 rounded-md opacity-20" style={{ left: '35%', animationDuration: '20s', background: 'white' }}></div>
-          <div className="floating-box w-20 h-20 rounded-xl opacity-10" style={{ left: '85%', animationDuration: '25s', background: 'white' }}></div>
         </div>
 
         <div className="relative z-10 max-w-lg">

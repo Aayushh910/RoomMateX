@@ -7,6 +7,7 @@ import { propertyService } from '../services/propertyService';
 import { reviewService } from '../services/reviewService';
 import { wishlistService } from '../services/wishlistService';
 import { getImageUrl } from '../utils/imageUtils';
+import { VerificationWarningModal } from '../components/modal/VerificationWarningModal';
 
 export const RoomDetailsPage = () => {
     const { id } = useParams();
@@ -37,13 +38,6 @@ export const RoomDetailsPage = () => {
         fetchPropertyDetails();
     }, [id]);
 
-    // Track property view when user is logged in
-    useEffect(() => {
-        if (user && id) {
-            propertyService.trackPropertyView(id);
-        }
-    }, [user, id]);
-
     // Check verification status
     useEffect(() => {
         if (!user?.is_verified) {
@@ -70,7 +64,6 @@ export const RoomDetailsPage = () => {
             const reviewsData = await reviewService.getPropertyReviews(id);
             setReviews(reviewsData.data || []);
         } catch (err) {
-            console.error('Failed to fetch property:', err);
             setError('Failed to load property details.');
         } finally {
             setLoading(false);
@@ -84,7 +77,7 @@ export const RoomDetailsPage = () => {
             const isInWishlist = wishlist.some(item => item.property_id === id);
             setIsWishlisted(isInWishlist);
         } catch (err) {
-            console.error('Failed to check wishlist:', err);
+            // Silently handle wishlist check errors
         }
     };
 
@@ -103,7 +96,6 @@ export const RoomDetailsPage = () => {
                 setIsWishlisted(true);
             }
         } catch (err) {
-            console.error('Failed to toggle wishlist:', err);
             showError('Failed to update wishlist. Please try again.');
         }
     };
@@ -131,7 +123,6 @@ export const RoomDetailsPage = () => {
             setReportReason('');
             setReportDescription('');
         } catch (err) {
-            console.error('Failed to report property:', err);
             showError('Failed to report property. Please try again.');
         } finally {
             setSubmitting(false);
@@ -166,7 +157,6 @@ export const RoomDetailsPage = () => {
             setReviewText('');
             showSuccess('Review submitted successfully!');
         } catch (err) {
-            console.error('Failed to submit review:', err);
             showError('Failed to submit review. Please try again.');
         } finally {
             setSubmitting(false);
@@ -441,7 +431,6 @@ export const RoomDetailsPage = () => {
                                                         setRoom(prev => ({ ...prev, is_active: response.is_active }));
                                                         showSuccess(response.message);
                                                     } catch (err) {
-                                                        console.error('Failed to toggle property status:', err);
                                                         showError('Failed to update property status. Please try again.');
                                                     }
                                                 }}
@@ -664,34 +653,13 @@ export const RoomDetailsPage = () => {
                 )}
 
             {/* Verification Warning Modal */}
-            {showVerificationWarning && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-                        <div className="bg-white rounded-2xl w-full max-w-md relative z-10 p-8 shadow-2xl animate-fade-in-up">
-                            <div className="text-center">
-                                <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-3">Verification Required</h3>
-                                <p className="text-gray-600 mb-6">To access room details, you need to complete your personal details and verify your identity.</p>
-                                <div className="space-y-3">
-                                    <button
-                                        onClick={() => navigate('/profile')}
-                                        className="w-full bg-primary-600 text-white py-3 rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20"
-                                    >
-                                        Go to Profile
-                                    </button>
-                                    <button
-                                        onClick={() => navigate('/rooms')}
-                                        className="w-full border border-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors"
-                                    >
-                                        Back to Rooms
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+            <VerificationWarningModal
+                isOpen={showVerificationWarning}
+                onClose={() => setShowVerificationWarning(false)}
+                message="To access room details, you need to complete your personal details and verify your identity."
+                secondaryAction="Back to Rooms"
+                secondaryPath="/rooms"
+            />
 
             {/* Contact Details Modal */}
             {showContactModal && (

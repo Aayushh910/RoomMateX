@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { adminService } from '../../services/adminService';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useToast } from '../../context/ToastContext';
 import { ConfirmModal } from '../../components/modal/ConfirmModal';
 import { AdminSidebar } from './AdminSidebar';
@@ -124,7 +125,6 @@ export const AdminDashboardPage = () => {
         setReportsTotal(reportsData.total);
       }
     } catch (error) {
-      console.error('Failed to fetch data:', error);
       if (error.response?.status === 401) {
         setError('Session expired. Please login again.');
         setTimeout(() => {
@@ -154,7 +154,6 @@ export const AdminDashboardPage = () => {
       fetchData();
       showSuccess('User status updated successfully');
     } catch (error) {
-      console.error('Failed to block user:', error);
       setError('Failed to block/unblock user');
     } finally {
       setActionLoading(false);
@@ -170,7 +169,6 @@ export const AdminDashboardPage = () => {
       setSelectedUser(userData);
       setShowUserModal(true);
     } catch (error) {
-      console.error('Failed to fetch user details:', error);
       setError('Failed to load user details');
     } finally {
       setActionLoading(false);
@@ -189,7 +187,6 @@ export const AdminDashboardPage = () => {
       setSelectedProperty(propertyData);
       setShowPropertyModal(true);
     } catch (error) {
-      console.error('Failed to fetch property details:', error);
       setError('Failed to load property details');
     } finally {
       setActionLoading(false);
@@ -216,7 +213,6 @@ export const AdminDashboardPage = () => {
       fetchData();
       showSuccess('Property status updated successfully');
     } catch (error) {
-      console.error('Failed to toggle property:', error);
       setError('Failed to activate/deactivate property');
     } finally {
       setActionLoading(false);
@@ -232,7 +228,6 @@ export const AdminDashboardPage = () => {
       setError(null);
       fetchData();
     } catch (error) {
-      console.error('Failed to update report status:', error);
       setError('Failed to update report status');
     } finally {
       setActionLoading(false);
@@ -259,7 +254,6 @@ export const AdminDashboardPage = () => {
       fetchData();
       showSuccess('Update sent to reporter successfully');
     } catch (error) {
-      console.error('Failed to send update:', error);
       setError('Failed to send update to reporter');
     } finally {
       setActionLoading(false);
@@ -291,7 +285,6 @@ export const AdminDashboardPage = () => {
       setOwnerMessage('');
       showSuccess('Notice sent to property owner successfully');
     } catch (error) {
-      console.error('Failed to send notice to owner:', error);
       setError('Failed to send notice to property owner');
     } finally {
       setActionLoading(false);
@@ -379,7 +372,7 @@ export const AdminDashboardPage = () => {
           
           {loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <LoadingSpinner size="lg" />
             </div>
           ) : (
             <>
