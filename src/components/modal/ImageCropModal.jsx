@@ -25,7 +25,7 @@ export const ImageCropModal = ({ image, onCropComplete, onCancel }) => {
             const croppedImage = await getCroppedImg(image, croppedAreaPixels);
             onCropComplete(croppedImage);
         } catch (error) {
-            console.error('Error cropping image:', error);
+            // Silently handle crop errors
         }
     };
 

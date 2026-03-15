@@ -29,7 +29,7 @@ export const Navbar = () => {
       const data = await notificationService.getUnreadCount();
       setUnreadCount(data.unread_count);
     } catch (error) {
-      console.error('Failed to fetch unread count:', error);
+      // Silently handle unread count fetch errors
     }
   };
 
@@ -48,11 +48,10 @@ export const Navbar = () => {
               <img 
                 src="/logos/logocrop.svg" 
                 alt="RoomMateX Logo" 
-                className="w-8 h-8 rounded-full transform group-hover:scale-110 transition-all duration-300"
+                className="w-8 h-8 rounded-[18px] transform group-hover:scale-110 transition-all duration-300"
               />
-              <span className="text-lg font-bold tracking-tight transition-all duration-300">
-                <span className="text-black group-hover:text-gray-800">Room</span>
-                <span className="text-[#4858AF] group-hover:text-[#3d4a8f]">MateX</span>
+              <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight group-hover:from-blue-700 group-hover:to-purple-700 transition-all duration-300">
+                RoomMateX
               </span>
             </Link>
 

@@ -212,7 +212,6 @@ export const NotificationsModal = ({ isOpen, onClose, onUnreadCountChange }) => 
       setReports(reportsData.reports);
       setOwnerReports(ownerData.reports);
     } catch (err) {
-      console.error('Failed to fetch notifications:', err);
       setError('Failed to load notifications');
     } finally {
       setLoading(false);
@@ -227,7 +226,7 @@ export const NotificationsModal = ({ isOpen, onClose, onUnreadCountChange }) => 
       ));
       if (onUnreadCountChange) onUnreadCountChange();
     } catch (err) {
-      console.error('Failed to mark as read:', err);
+      // Silently handle mark as read errors
     }
   };
 
@@ -239,7 +238,7 @@ export const NotificationsModal = ({ isOpen, onClose, onUnreadCountChange }) => 
       ));
       if (onUnreadCountChange) onUnreadCountChange();
     } catch (err) {
-      console.error('Failed to mark as read:', err);
+      // Silently handle mark as read errors
     }
   };
 
@@ -254,7 +253,7 @@ export const NotificationsModal = ({ isOpen, onClose, onUnreadCountChange }) => 
       }
       if (onUnreadCountChange) onUnreadCountChange();
     } catch (err) {
-      console.error('Failed to mark all as read:', err);
+      // Silently handle mark all as read errors
     }
   };
 
