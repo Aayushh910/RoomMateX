@@ -188,7 +188,7 @@ class AuthService:
             return False, "No OTP request found. Please request a new OTP"
         
         # Check if OTP expired
-        if not user.otp_expiry or datetime.now(timezone.utc) > user.otp_expiry:
+        if not user.otp_expiry or datetime.utcnow() > user.otp_expiry:
             # Clear expired OTP
             user.otp_code = None
             user.otp_expiry = None

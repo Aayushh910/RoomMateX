@@ -20,9 +20,7 @@ class UserService:
         - User's properties (with images, amenities, house rules)
         - User's reviews
         - User's wishlist entries
-        - User's contact requests (sent and received)
         - User's reports
-        - User's recently viewed records
         - User account
         
         Uses transaction to ensure data consistency.

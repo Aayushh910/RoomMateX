@@ -7,13 +7,13 @@ from app.models.user import UserRole
 
 class UserRegister(BaseModel):
     full_name: str = Field(..., min_length=2, max_length=100)
-    phone_number: str = Field(..., min_length=10, max_length=15)
+    phone_number: str = Field(..., min_length=10, max_length=15)  # Fixed: matches database schema
     email: EmailStr
     password: str = Field(..., min_length=6)
     city: str = Field(..., min_length=2, max_length=100)
     role: UserRole
     
-    @validator('phone_number')
+    @validator('phone_number')  # Fixed: matches field name
     def validate_phone(cls, v):
         if not v.replace('+', '').replace('-', '').replace(' ', '').isdigit():
             raise ValueError('Phone number must contain only digits, spaces, hyphens, or plus sign')
@@ -31,7 +31,7 @@ class UserResponse(BaseModel):
     email: str
     role: UserRole
     city: str
-    phone_number: str
+    phone_number: str  # Fixed: matches database schema
     is_active: bool
     is_verified: bool
     occupation: Optional[str] = None
@@ -54,14 +54,14 @@ class UserUpdate(BaseModel):
     age: Optional[int] = Field(None, ge=18, le=100)
     bio: Optional[str] = Field(None, max_length=500)
     city: Optional[str] = Field(None, min_length=2, max_length=100)
-    phone_number: Optional[str] = Field(None, min_length=10, max_length=15)
+    phone_number: Optional[str] = Field(None, min_length=10, max_length=15)  # Fixed: matches database schema
     gender_preference: Optional[str] = Field(None, max_length=20)
     budget_min: Optional[int] = Field(None, ge=0)
     budget_max: Optional[int] = Field(None, ge=0)
     lifestyle: Optional[str] = None  # JSON string
     interests: Optional[str] = None  # JSON string
     
-    @validator('phone_number')
+    @validator('phone_number')  # Fixed: matches field name
     def validate_phone(cls, v):
         if v and not v.replace('+', '').replace('-', '').replace(' ', '').isdigit():
             raise ValueError('Phone number must contain only digits, spaces, hyphens, or plus sign')
@@ -85,7 +85,7 @@ class RefreshTokenRequest(BaseModel):
 
 
 class OTPRequest(BaseModel):
-    otp: str = Field(..., min_length=4, max_length=4)
+    otp: str = Field(..., min_length=6, max_length=6)
 
 
 class ChangePasswordRequest(BaseModel):
@@ -99,7 +99,7 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     email: EmailStr
-    otp: str = Field(..., min_length=4, max_length=6)
+    otp: str = Field(..., min_length=6, max_length=6)
     new_password: str = Field(..., min_length=6)
 
 

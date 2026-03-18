@@ -210,6 +210,7 @@ class ReviewCreate(BaseModel):
 class ReviewResponse(BaseModel):
     id: UUID
     user_name: str
+    user_profile_photo: Optional[str]
     rating: int
     comment: Optional[str]
     created_at: datetime
@@ -222,6 +223,7 @@ class ReviewResponse(BaseModel):
         data = {
             "id": obj.id,
             "user_name": obj.user.full_name if obj.user else "Unknown",
+            "user_profile_photo": obj.user.profile_photo if obj.user else None,
             "rating": obj.rating,
             "comment": obj.comment,
             "created_at": obj.created_at
@@ -268,9 +270,19 @@ class OwnerResponse(BaseModel):
     id: UUID
     full_name: str
     email: str
-    phone: Optional[str]
+    phone_number: Optional[str]
     role: str
     is_verified: bool
+    profile_photo: Optional[str]
+    city: Optional[str]
+    occupation: Optional[str]
+    age: Optional[int]
+    bio: Optional[str]
+    lifestyle: Optional[str]
+    interests: Optional[str]
+    gender_preference: Optional[str]
+    budget_min: Optional[int]
+    budget_max: Optional[int]
     
     class Config:
         from_attributes = True
@@ -315,9 +327,19 @@ class PropertyDetailsResponse(BaseModel):
             id=obj.owner.id,
             full_name=obj.owner.full_name,
             email=obj.owner.email,
-            phone=obj.owner.phone_number,
+            phone_number=obj.owner.phone_number,
             role=obj.owner.role.value,
-            is_verified=obj.owner.is_verified
+            is_verified=obj.owner.is_verified,
+            profile_photo=obj.owner.profile_photo,
+            city=obj.owner.city,
+            occupation=obj.owner.occupation,
+            age=obj.owner.age,
+            bio=obj.owner.bio,
+            lifestyle=obj.owner.lifestyle,
+            interests=obj.owner.interests,
+            gender_preference=obj.owner.gender_preference,
+            budget_min=obj.owner.budget_min,
+            budget_max=obj.owner.budget_max
         )
         
         data = {

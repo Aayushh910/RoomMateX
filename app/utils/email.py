@@ -61,10 +61,12 @@ class EmailService:
                 server.send_message(message)
             
             logger.info(f"Email sent successfully to {to_email}")
+            print(f"✅ Email sent successfully to {to_email}")
             return True
             
         except smtplib.SMTPAuthenticationError as e:
             logger.error(f"SMTP Authentication failed: {e}")
+            print(f"❌ SMTP Authentication failed: {e}")
             logger.error("Please check EMAIL_USERNAME and EMAIL_PASSWORD in .env")
             logger.error("For Gmail, you need to use an App Password, not your regular password")
             logger.error("See GMAIL_SETUP_GUIDE.md for instructions")
@@ -72,10 +74,12 @@ class EmailService:
             
         except smtplib.SMTPException as e:
             logger.error(f"SMTP error sending email: {e}")
+            print(f"❌ SMTP error: {e}")
             return False
             
         except Exception as e:
             logger.error(f"Unexpected error sending email: {e}")
+            print(f"❌ Unexpected error sending email: {e}")
             return False
     
     @staticmethod

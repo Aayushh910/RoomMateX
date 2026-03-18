@@ -222,6 +222,7 @@ class PropertyService(BaseService):
         property_id: UUID,
         property_data: PropertyUpdate,
         images: Optional[List[UploadFile]],
+        images_to_remove: Optional[List[str]],
         current_user: User,
         db: Session
     ) -> Property:
@@ -278,6 +279,28 @@ class PropertyService(BaseService):
                     image_url=image_url
                 )
                 db.add(property_image)
+        
+        # Remove specified images if provided
+        if images_to_remove:
+            # Get existing images to delete from Cloudinary
+            existing_images = db.query(PropertyImage).filter(
+                PropertyImage.property_id == property_id,
+                PropertyImage.image_url.in_(images_to_remove)
+            ).all()
+            
+            # Delete from Cloudinary
+            for image in existing_images:
+                try:
+                    FileUploadService.delete_image(image.image_url)
+                except Exception as e:
+                    # Log error but don't fail the update
+                    print(f"Failed to delete image from Cloudinary: {e}")
+            
+            # Delete from database
+            db.query(PropertyImage).filter(
+                PropertyImage.property_id == property_id,
+                PropertyImage.image_url.in_(images_to_remove)
+            ).delete(synchronize_session=False)
         
         db.commit()
         db.refresh(property_obj)

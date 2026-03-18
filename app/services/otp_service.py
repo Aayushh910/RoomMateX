@@ -10,7 +10,7 @@ class OTPService:
     """Service for handling OTP generation and verification."""
     
     @staticmethod
-    def generate_otp(length: int = 4) -> str:
+    def generate_otp(length: int = 6) -> str:
         """Generate a secure OTP of specified length."""
         return ''.join([str(secrets.randbelow(10)) for _ in range(length)])
     
@@ -187,8 +187,7 @@ class OTPService:
         hashed_otp = OTPService.hash_otp(otp_code)
         
         # Set expiry (5 minutes from now)
-        from datetime import timezone
-        expiry = datetime.now(timezone.utc) + timedelta(minutes=5)
+        expiry = datetime.utcnow() + timedelta(minutes=5)
         
         # Update user record
         user.otp_code = hashed_otp
