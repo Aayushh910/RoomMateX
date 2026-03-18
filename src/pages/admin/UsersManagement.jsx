@@ -1,4 +1,4 @@
-import { Search, Filter, Eye, Ban, CheckCircle } from 'lucide-react';
+import { Search, Filter, Eye, Ban, CheckCircle, Trash2 } from 'lucide-react';
 import { GUJARAT_CITIES } from '../../constants/cities';
 
 export const UsersManagement = ({ 
@@ -10,6 +10,7 @@ export const UsersManagement = ({
   onClearFilters,
   onViewUser,
   onBlockUser,
+  onDeleteUser,
   actionLoading 
 }) => {
   return (
@@ -144,6 +145,14 @@ export const UsersManagement = ({
                       disabled={actionLoading}
                     >
                       {user.is_active ? <Ban className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                    </button>
+                    <button
+                      onClick={() => onDeleteUser(user.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete User Permanently"
+                      disabled={actionLoading}
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </td>

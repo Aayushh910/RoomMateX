@@ -55,8 +55,10 @@ export const AdminDashboardPage = () => {
 
   // Confirmation modals
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showTogglePropertyConfirm, setShowTogglePropertyConfirm] = useState(false);
   const [userToBlock, setUserToBlock] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [propertyToToggle, setPropertyToToggle] = useState(null);
 
   const adminData = adminService.getAdminData();
@@ -159,6 +161,30 @@ export const AdminDashboardPage = () => {
       setActionLoading(false);
       setShowBlockConfirm(false);
       setUserToBlock(null);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    setUserToDelete(userId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    
+    setActionLoading(true);
+    try {
+      await adminService.deleteUser(userToDelete);
+      setError(null);
+      fetchData();
+      showSuccess('User deleted successfully');
+    } catch (error) {
+      setError('Failed to delete user');
+      showError('Failed to delete user. Please try again.');
+    } finally {
+      setActionLoading(false);
+      setShowDeleteConfirm(false);
+      setUserToDelete(null);
     }
   };
 
@@ -388,6 +414,7 @@ export const AdminDashboardPage = () => {
                   onClearFilters={handleClearUserFilters}
                   onViewUser={handleViewUser}
                   onBlockUser={handleBlockUser}
+                  onDeleteUser={handleDeleteUser}
                   actionLoading={actionLoading}
                 />
               )}
@@ -478,6 +505,17 @@ export const AdminDashboardPage = () => {
         confirmText="Confirm"
         cancelText="Cancel"
         type="warning"
+      />
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDeleteUser}
+        title="Delete User Permanently"
+        message="Are you sure you want to permanently delete this user? This action will delete the user and all their associated data (properties, reviews, reports, etc.) and cannot be undone."
+        confirmText="Delete Permanently"
+        cancelText="Cancel"
+        type="danger"
       />
 
       <ConfirmModal

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { authService } from '../services/authService';
 
 export const LoginPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -14,40 +16,88 @@ export const LoginPage = () => {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [resetStep, setResetStep] = useState(1);
+  const [resetLoading, setResetLoading] = useState(false);
   const { login } = useAuth();
+  const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
-  const handleForgotPassword = () => {
+  const handleForgotPassword = async () => {
     if (!forgotEmail) {
       setError('Please enter your email');
       return;
     }
+    
+    setResetLoading(true);
     setError('');
-    setOtpSent(true);
-    setResetStep(2);
-  };
-
-  const handleVerifyOtp = () => {
-    if (otp === '1234') {
-      setError('');
-      setResetStep(3);
-    } else {
-      setError('Invalid OTP. Use 1234.');
+    
+    try {
+      await authService.forgotPassword(forgotEmail);
+      setOtpSent(true);
+      setResetStep(2);
+      showSuccess('OTP sent to your email address');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to send OTP. Please try again.');
+    } finally {
+      setResetLoading(false);
     }
   };
 
-  const handleResetPassword = () => {
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length < 4) {
+      setError('Please enter a valid OTP');
+      return;
+    }
+    
+    setResetLoading(true);
+    setError('');
+    
+    try {
+      // For password reset, we don't verify OTP separately
+      // We'll verify it when resetting the password
+      setResetStep(3);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Invalid OTP. Please try again.');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
     if (!newPassword || newPassword.length < 6) {
       setError('Password must be at least 6 characters');
       return;
     }
+    
+    setResetLoading(true);
     setError('');
+    
+    try {
+      await authService.resetPassword(forgotEmail, otp, newPassword);
+      showSuccess('Password reset successfully! You can now login with your new password.');
+      
+      // Reset form and close modal
+      setShowForgotPassword(false);
+      setResetStep(1);
+      setForgotEmail('');
+      setOtp('');
+      setNewPassword('');
+      setOtpSent(false);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to reset password. Please check your OTP and try again.');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const resetForgotPasswordForm = () => {
     setShowForgotPassword(false);
+    setError('');
     setResetStep(1);
     setForgotEmail('');
     setOtp('');
     setNewPassword('');
     setOtpSent(false);
+    setResetLoading(false);
   };
 
   const handleSubmit = async (e) => {
@@ -100,7 +150,7 @@ export const LoginPage = () => {
             <img 
               src="/logos/logocrop.png" 
               alt="RoomMateX Logo" 
-              className="w-10 h-10 rounded-[18px] transform group-hover:scale-110 transition-transform duration-300"
+              className="w-10 h-10 rounded-[16px] transform group-hover:scale-110 transition-transform duration-300"
             />
              <span className="text-2xl font-bold tracking-tight transition-all duration-300">
                   <span className="text-black dark:text-black group-hover:text-gray-800">
@@ -250,7 +300,7 @@ export const LoginPage = () => {
                 {resetStep === 2 && 'Enter OTP'}
                 {resetStep === 3 && 'Reset Password'}
               </h3>
-              <button onClick={() => { setShowForgotPassword(false); setError(''); setResetStep(1); }} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => resetForgotPasswordForm()} className="text-gray-400 hover:text-gray-600">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
@@ -270,8 +320,12 @@ export const LoginPage = () => {
                     placeholder="you@email.com"
                   />
                 </div>
-                <button onClick={handleForgotPassword} className="w-full bg-primary-600 text-white py-3 rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20">
-                  Send OTP
+                <button 
+                  onClick={handleForgotPassword} 
+                  disabled={resetLoading}
+                  className={`w-full bg-primary-600 text-white py-3 rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 ${resetLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {resetLoading ? 'Sending...' : 'Send OTP'}
                 </button>
               </div>
             )}
@@ -279,8 +333,9 @@ export const LoginPage = () => {
             {resetStep === 2 && (
               <div className="space-y-4">
                 <div className="text-center mb-4">
-                  <p className="text-gray-600 text-sm">We sent an OTP to</p>
+                  <p className="text-gray-600 text-sm">We sent a 6-digit OTP to</p>
                   <p className="font-bold text-gray-900 mt-1">{forgotEmail}</p>
+                  <p className="text-xs text-gray-500 mt-2">Check your email inbox and spam folder</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Enter OTP</label>
@@ -288,21 +343,40 @@ export const LoginPage = () => {
                     type="text"
                     value={otp}
                     onChange={(e) => { setOtp(e.target.value); setError(''); }}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all text-center tracking-[1em] font-bold text-2xl"
-                    placeholder="0000"
-                    maxLength={4}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all text-center tracking-[0.5em] font-bold text-lg"
+                    placeholder="000000"
+                    maxLength={6}
                   />
-                  <p className="text-xs text-center text-gray-500 mt-2">Demo OTP: <strong>1234</strong></p>
+                  <p className="text-xs text-center text-gray-500 mt-2">Enter the 6-digit OTP sent to your email</p>
                 </div>
-                <button onClick={handleVerifyOtp} className="w-full bg-primary-600 text-white py-3 rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20">
-                  Verify OTP
+                <button 
+                  onClick={handleVerifyOtp} 
+                  disabled={resetLoading}
+                  className={`w-full bg-primary-600 text-white py-3 rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 ${resetLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {resetLoading ? 'Verifying...' : 'Continue'}
                 </button>
+                <div className="text-center">
+                  <button 
+                    onClick={() => { setResetStep(1); setOtp(''); setError(''); }} 
+                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    ← Back to email entry
+                  </button>
+                </div>
               </div>
             )}
 
             {resetStep === 3 && (
               <div className="space-y-4">
-                <p className="text-gray-600 text-sm">Enter your new password</p>
+                <div className="text-center mb-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-600 text-sm">OTP verified! Now create your new password</p>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
                   <input
@@ -314,8 +388,12 @@ export const LoginPage = () => {
                   />
                   <p className="text-xs text-gray-500 mt-2">Password must be at least 6 characters</p>
                 </div>
-                <button onClick={handleResetPassword} className="w-full bg-primary-600 text-white py-3 rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20">
-                  Reset Password
+                <button 
+                  onClick={handleResetPassword} 
+                  disabled={resetLoading}
+                  className={`w-full bg-primary-600 text-white py-3 rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 ${resetLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {resetLoading ? 'Resetting...' : 'Reset Password'}
                 </button>
               </div>
             )}
@@ -377,11 +455,21 @@ export const LoginPage = () => {
           {/* Feature Stats */}
           <div className="grid grid-cols-2 gap-4 mb-8 animate-fade-in delay-600">
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-              <div className="text-3xl font-bold text-white mb-1">2,800+</div>
+              <div className="flex items-center gap-2 mb-1">
+                <svg className="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <div className="text-3xl font-bold text-white">2,800+</div>
+              </div>
               <div className="text-gray-400 font-medium text-sm">Active Users</div>
             </div>
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-              <div className="text-3xl font-bold text-white mb-1">98%</div>
+              <div className="flex items-center gap-2 mb-1">
+                <svg className="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="text-3xl font-bold text-white">98%</div>
+              </div>
               <div className="text-gray-400 font-medium text-sm">Satisfaction</div>
             </div>
           </div>

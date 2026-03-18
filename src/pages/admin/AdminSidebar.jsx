@@ -1,10 +1,10 @@
-import { LayoutDashboard, Users, Home, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
+import { BarChart3, Users, Building2, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 
 export const AdminSidebar = ({ sidebarOpen, setSidebarOpen, activeSection, setActiveSection, onLogout }) => {
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'users', label: 'Users Management', icon: Users },
-    { id: 'properties', label: 'Properties/Listings', icon: Home },
+    { id: 'properties', label: 'Properties/Listings', icon: Building2 },
     { id: 'reports', label: 'Reports/Complaints', icon: AlertTriangle },
   ];
 

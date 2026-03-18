@@ -210,7 +210,7 @@ export const DashboardPage = () => {
                                         {/* Status Badge */}
                                         <div className={`absolute top-4 right-4 z-20 px-3 py-1 rounded-full text-xs font-bold shadow-md ${
                                             room.is_active 
-                                                ? 'bg-green-500 text-white' 
+                                                ? 'bg-blue-500 text-white' 
                                                 : 'bg-gray-500 text-white'
                                         }`}>
                                             {room.is_active ? 'Active' : 'Inactive'}
@@ -331,7 +331,7 @@ export const DashboardPage = () => {
                                             alt={room.property_title}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                         />
-                                        <div className="absolute top-4 right-4 z-20 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
+                                        <div className="absolute top-4 right-4 z-20 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
                                             New
                                         </div>
                                     </div>

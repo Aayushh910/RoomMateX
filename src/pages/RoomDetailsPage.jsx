@@ -358,8 +358,18 @@ export const RoomDetailsPage = () => {
                                             <div key={review.id} className="border-b border-gray-100 last:border-0 pb-6 last:pb-0">
                                                 <div className="flex items-start justify-between mb-3">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-100 to-indigo-100 flex items-center justify-center text-primary-600 font-bold text-lg">
-                                                            {review.user_name[0]}
+                                                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary-100 to-indigo-100 flex-shrink-0">
+                                                            {review.user_profile_photo ? (
+                                                                <img 
+                                                                    src={getImageUrl(review.user_profile_photo)} 
+                                                                    alt={review.user_name}
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center text-primary-600 font-bold text-lg">
+                                                                    {review.user_name[0]}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <div>
                                                             <p className="font-bold text-gray-900">{review.user_name}</p>
@@ -665,52 +675,85 @@ export const RoomDetailsPage = () => {
             {showContactModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowContactModal(false)}></div>
-                    <div className="bg-white rounded-2xl w-full max-w-sm relative z-10 p-6 shadow-2xl animate-fade-in-up">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-gray-900">Contact Owner</h3>
-                            <button onClick={() => setShowContactModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    <div className="bg-white rounded-2xl w-full max-w-md relative z-10 shadow-2xl overflow-hidden">
+
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                            <h3 className="text-base font-bold text-gray-900">Owner Profile</h3>
+                            <button onClick={() => setShowContactModal(false)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
-                        
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-                                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                    </svg>
+
+                        {/* Profile */}
+                        <div className="px-6 py-5">
+                            <div className="flex items-center gap-4 mb-5">
+                                <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-primary-500 to-indigo-600 shadow-md">
+                                    {room.owner.profile_photo ? (
+                                        <img src={getImageUrl(room.owner.profile_photo)} alt={room.owner.full_name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-white text-xl font-bold">
+                                            {room.owner.full_name?.[0] || 'U'}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs text-gray-500 mb-1">Email</p>
-                                    <a href={`mailto:${room.owner.email}`} className="text-sm font-semibold text-primary-600 hover:text-primary-700 break-all">
-                                        {room.owner.email}
-                                    </a>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <h4 className="text-lg font-bold text-gray-900">{room.owner.full_name}</h4>
+                                        {room.owner.is_verified && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full border border-blue-100">
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                                Verified
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1 text-sm text-gray-500">
+                                        {room.owner.occupation && <span>{room.owner.occupation}</span>}
+                                        {room.owner.occupation && room.owner.city && <span>·</span>}
+                                        {room.owner.city && <span>{room.owner.city}</span>}
+                                    </div>
                                 </div>
                             </div>
 
-                            {room.owner.phone && (
-                                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-                                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                        </svg>
+                            {room.owner.bio && (
+                                <p className="text-sm text-gray-500 leading-relaxed mb-5 border-l-2 border-gray-200 pl-3">{room.owner.bio}</p>
+                            )}
+
+                            {/* Contact rows */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                                            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-400 font-medium">Email</p>
+                                            <p className="text-sm font-semibold text-gray-800">{room.owner.email}</p>
+                                        </div>
                                     </div>
-                                    <div className="flex-1">
-                                        <p className="text-xs text-gray-500 mb-1">Phone</p>
-                                        <a href={`tel:${room.owner.phone}`} className="text-sm font-semibold text-green-600 hover:text-green-700">
-                                            {room.owner.phone}
+                                    <a href={`mailto:${room.owner.email}`} className="text-xs font-semibold text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 px-3 py-1.5 rounded-lg transition-colors">
+                                        Send Mail
+                                    </a>
+                                </div>
+
+                                {(room.owner.phone_number || room.owner.phone) && (
+                                    <div className="flex items-center justify-between py-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-gray-400 font-medium">Phone</p>
+                                                <p className="text-sm font-semibold text-gray-800">{room.owner.phone_number || room.owner.phone}</p>
+                                            </div>
+                                        </div>
+                                        <a href={`tel:${room.owner.phone_number || room.owner.phone}`} className="text-xs font-semibold text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg transition-colors">
+                                            Call Now
                                         </a>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
-
-                        <button
-                            onClick={() => setShowContactModal(false)}
-                            className="w-full mt-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
-                        >
-                            Close
-                        </button>
                     </div>
                 </div>
             )}

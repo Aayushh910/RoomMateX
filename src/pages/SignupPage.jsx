@@ -74,11 +74,11 @@ export const SignupPage = () => {
             <img 
               src="/logos/logocrop.png" 
               alt="RoomMateX Logo" 
-              className="w-10 h-10 rounded-[18px] transform group-hover:scale-110 transition-transform duration-300"
+              className="w-10 h-10 rounded-[16px] transform group-hover:scale-110 transition-transform duration-300"
             />
             <span className="text-2xl font-bold tracking-tight">
-              <span className="text-black">Room</span>
-              <span className="text-[#4858AF]">MateX</span>
+              <span className="text-white">Room</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-indigo-400">MateX</span>
             </span>
           </Link>
 

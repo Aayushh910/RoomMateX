@@ -191,40 +191,30 @@ export const RoomsPage = () => {
 
                 {/* Main Content */}
                 <div className="flex-1">
-                    {/* Search Bar */}
-                    <div className="mb-6">
-                        <div className="relative">
+                    {/* Search Bar + Sort */}
+                    <div className="mb-6 flex items-center gap-3">
+                        <div className="relative flex-1">
                             <input
                                 type="text"
-                                placeholder="Search by location, landmark, or building..."
+                                placeholder="Search by location, landmark..."
                                 value={filters.search}
                                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                                className="w-full px-5 py-3 pl-12 rounded-xl border border-gray-200 shadow-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all"
+                                className="w-full px-4 py-2 pl-9 rounded-xl border border-gray-200 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all text-sm"
                             />
-                            <svg className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
-                    </div>
-
-                    {/* Results Count */}
-                    <div className="mb-6 flex items-center justify-between">
-                        <p className="text-gray-600">
-                            {loading ? 'Loading...' : `Showing ${filteredRooms.length} results`}
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">Sort by:</span>
-                            <select 
-                                value={sortBy} 
-                                onChange={(e) => setSortBy(e.target.value)}
-                                className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-900 cursor-pointer hover:border-primary-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
-                                disabled={loading}
-                            >
-                                <option value="newest">Newest First</option>
-                                <option value="priceLow">Price: Low to High</option>
-                                <option value="priceHigh">Price: High to Low</option>
-                            </select>
-                        </div>
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 cursor-pointer hover:border-primary-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all flex-shrink-0"
+                            disabled={loading}
+                        >
+                            <option value="newest">Newest</option>
+                            <option value="priceLow">Price ↑</option>
+                            <option value="priceHigh">Price ↓</option>
+                        </select>
                     </div>
 
                     {/* Error Message */}
@@ -255,6 +245,7 @@ export const RoomsPage = () => {
 
                     {/* Grid */}
                     {!loading && (
+                        <>
                         <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                             {filteredRooms.map((room) => (
                                 <Link to={`/rooms/${room.id}`} key={room.id} className="group glass-card rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.01] flex flex-col">
@@ -331,6 +322,10 @@ export const RoomsPage = () => {
                             </div>
                         )}
                         </div>
+                        {filteredRooms.length > 0 && (
+                            <p className="text-center text-xs text-gray-400 mt-4">{filteredRooms.length} result{filteredRooms.length !== 1 ? 's' : ''} found</p>
+                        )}
+                        </>
                     )}
                 </div>
             </div>

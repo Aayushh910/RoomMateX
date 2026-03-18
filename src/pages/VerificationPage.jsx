@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/Navbar';
 import { authService } from '../services/authService';
 import { userService } from '../services/userService';
+import { checkProfileCompleteness, getProfileCompletionMessage } from '../utils/profileUtils';
 
 export const VerificationPage = () => {
     const { user, verifyOTP, sendOTP, refreshUser } = useAuth();
@@ -15,13 +16,36 @@ export const VerificationPage = () => {
     const [otp, setOtp] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [profileCompleteness, setProfileCompleteness] = useState(null);
     const [passwordData, setPasswordData] = useState({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
     });
 
+    // Check profile completeness when component mounts or user changes
+    useEffect(() => {
+        if (user && action === 'verify') {
+            const completeness = checkProfileCompleteness(user);
+            setProfileCompleteness(completeness);
+            
+            // If profile is not complete, show error immediately
+            if (!completeness.isComplete) {
+                setError(getProfileCompletionMessage(completeness));
+            }
+        }
+    }, [user, action]);
+
     const handleSendOtp = async (type) => {
+        // Check profile completeness for verification action
+        if (action === 'verify') {
+            const completeness = checkProfileCompleteness(user);
+            if (!completeness.isComplete) {
+                setError(getProfileCompletionMessage(completeness));
+                return;
+            }
+        }
+
         setVerificationType(type);
         setLoading(true);
         setError('');
@@ -59,8 +83,8 @@ export const VerificationPage = () => {
     };
 
     const handleVerifyOtp = async () => {
-        if (!otp || otp.length < 4) {
-            setError('Please enter a valid OTP');
+        if (!otp || otp.length < 6) {
+            setError('Please enter a valid 6-digit OTP');
             return;
         }
 
@@ -244,24 +268,88 @@ export const VerificationPage = () => {
                         <div className="space-y-4">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">Choose Verification Method</h2>
                             
+                            {/* Profile Completeness Check for Verification */}
+                            {action === 'verify' && profileCompleteness && !profileCompleteness.isComplete && (
+                                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6 mb-6">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-lg font-bold text-amber-800 mb-2">Complete Your Profile First</h3>
+                                            <p className="text-amber-700 text-sm mb-3">
+                                                To verify your account, you need to complete all profile information. This helps us ensure account security and provides better matches.
+                                            </p>
+                                            <div className="bg-amber-100/50 rounded-lg p-3 mb-4">
+                                                <div className="flex justify-between text-xs text-amber-700 mb-2">
+                                                    <span>Profile Progress</span>
+                                                    <span>{profileCompleteness.filledFields}/{profileCompleteness.totalFields} fields completed</span>
+                                                </div>
+                                                <div className="w-full bg-amber-200 rounded-full h-2.5">
+                                                    <div 
+                                                        className="bg-amber-500 h-2.5 rounded-full transition-all duration-500" 
+                                                        style={{ width: `${profileCompleteness.completionPercentage}%` }}
+                                                    ></div>
+                                                </div>
+                                                <p className="text-xs text-amber-600 mt-2">
+                                                    <span className="font-semibold">{profileCompleteness.completionPercentage}% complete</span> - 
+                                                    Missing: {profileCompleteness.missingFields.slice(0, 2).join(', ')}
+                                                    {profileCompleteness.missingFields.length > 2 && ` and ${profileCompleteness.missingFields.length - 2} more`}
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => navigate('/profile')}
+                                                className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 px-4 rounded-xl font-bold hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                                Complete Profile Now
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {action === 'verify' && profileCompleteness && profileCompleteness.isComplete && (
+                                <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-semibold text-green-800">Profile Complete!</p>
+                                            <p className="text-xs text-green-700">Your profile is 100% complete. You can now verify your account.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
                             {/* Notice */}
-                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4">
-                                <p className="text-sm text-blue-800 flex items-center gap-2">
-                                    <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                    </svg>
-                                    <span>Click once and wait. It may take 2-3 seconds to send the OTP.</span>
-                                </p>
-                            </div>
+                            {(!profileCompleteness || profileCompleteness.isComplete) && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4">
+                                    <p className="text-sm text-blue-800 flex items-center gap-2">
+                                        <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                        </svg>
+                                        <span>Click once and wait. It may take 2-3 seconds to send the OTP.</span>
+                                    </p>
+                                </div>
+                            )}
 
                                 <button
                                     onClick={() => handleSendOtp('email')}
-                                    disabled={loading}
-                                    className={`w-full p-4 border-2 border-gray-200 rounded-xl transition-all group relative ${
-                                        loading ? 'opacity-50 cursor-not-allowed' : 
-                                        action === 'verify' ? 'hover:border-blue-500 hover:bg-blue-50' :
-                                        action === 'changePassword' ? 'hover:border-emerald-500 hover:bg-emerald-50' :
-                                        'hover:border-red-500 hover:bg-red-50'
+                                    disabled={loading || (action === 'verify' && profileCompleteness && !profileCompleteness.isComplete)}
+                                    className={`w-full p-4 border-2 rounded-xl transition-all group relative ${
+                                        loading || (action === 'verify' && profileCompleteness && !profileCompleteness.isComplete) 
+                                            ? 'opacity-50 cursor-not-allowed border-gray-200 bg-gray-50' : 
+                                        action === 'verify' ? 'border-gray-200 hover:border-blue-500 hover:bg-blue-50' :
+                                        action === 'changePassword' ? 'border-gray-200 hover:border-emerald-500 hover:bg-emerald-50' :
+                                        'border-gray-200 hover:border-red-500 hover:bg-red-50'
                                     }`}
                                 >
                                     {loading && (
@@ -269,6 +357,16 @@ export const VerificationPage = () => {
                                             <div className="flex items-center gap-2">
                                                 <div className="w-5 h-5 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                                                 <span className="text-sm font-medium text-blue-600">Sending OTP...</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {action === 'verify' && profileCompleteness && !profileCompleteness.isComplete && (
+                                        <div className="absolute inset-0 bg-gray-100/90 rounded-xl flex items-center justify-center">
+                                            <div className="text-center">
+                                                <svg className="w-6 h-6 text-gray-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                </svg>
+                                                <span className="text-xs font-medium text-gray-500">Complete profile first</span>
                                             </div>
                                         </div>
                                     )}
@@ -330,9 +428,9 @@ export const VerificationPage = () => {
                                     type="text"
                                     value={otp}
                                     onChange={(e) => { setOtp(e.target.value); setError(''); }}
-                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all text-center tracking-[1em] font-bold text-2xl"
-                                    placeholder="0000"
-                                    maxLength={4}
+                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all text-center tracking-[0.5em] font-bold text-lg"
+                                    placeholder="000000"
+                                    maxLength={6}
                                 />
                                 {error && <p className="text-sm text-red-600 mt-2 text-center">{error}</p>}
                                 <p className="text-xs text-center text-gray-500 mt-2"></p>
@@ -360,6 +458,18 @@ export const VerificationPage = () => {
                             >
                                 Change verification method
                             </button>
+
+                            {(action === 'changePassword' || action === 'deleteAccount') && (
+                                <button
+                                    onClick={() => navigate('/profile')}
+                                    className="w-full mt-2 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors text-sm flex items-center justify-center gap-2"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                    </svg>
+                                    Back to Profile
+                                </button>
+                            )}
                         </div>
                     )}
 
@@ -434,6 +544,15 @@ export const VerificationPage = () => {
                                 className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20 mt-2"
                             >
                                 Change Password
+                            </button>
+                            <button
+                                onClick={() => navigate('/profile')}
+                                className="w-full mt-2 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors text-sm flex items-center justify-center gap-2"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                                Back to Profile
                             </button>
                         </div>
                     )}

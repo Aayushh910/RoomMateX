@@ -93,10 +93,10 @@ export const AddRoomPage = () => {
             // Title validation
             if (!formData.title.trim()) {
                 newErrors.title = "Property title is required";
-            } else if (formData.title.trim().length < 10) {
-                newErrors.title = "Title must be at least 10 characters long";
-            } else if (formData.title.trim().length > 100) {
-                newErrors.title = "Title must not exceed 100 characters";
+            } else if (formData.title.trim().length < 6) {
+                newErrors.title = "Title must be at least 6 characters long";
+            } else if (formData.title.trim().length > 20) {
+                newErrors.title = "Title must not exceed 20 characters";
             }
             
             // Property type validation
@@ -338,8 +338,8 @@ export const AddRoomPage = () => {
                                                     ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-100' 
                                                     : 'border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100'
                                             } outline-none text-sm`}
-                                            placeholder="e.g. Spacious 2BHK Apartment in Prime Location"
-                                            maxLength="100"
+                                            placeholder="e.g. Spacious 2BHK Flat"
+                                            maxLength="20"
                                         />
                                         {errors.title && (
                                             <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
@@ -349,9 +349,7 @@ export const AddRoomPage = () => {
                                                 {errors.title}
                                             </p>
                                         )}
-                                        <p className="text-gray-500 text-xs mt-1">
-                                            Write a descriptive title (10-100 characters)
-                                        </p>
+                                        <p className="text-gray-500 text-xs mt-1">Write a short title (6–20 characters)</p>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">

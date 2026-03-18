@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { GUJARAT_CITIES } from '../constants/cities';
 import { propertyService } from '../services/propertyService';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { getImageUrl } from '../utils/imageUtils';
 
 export const EditRoomPage = () => {
     const { id } = useParams();
@@ -27,6 +28,9 @@ export const EditRoomPage = () => {
         rules: '',
         description: ''
     });
+    const [existingImages, setExistingImages] = useState([]);
+    const [newImages, setNewImages] = useState([]);
+    const [imagesToRemove, setImagesToRemove] = useState([]);
 
     useEffect(() => {
         fetchPropertyData();
@@ -59,6 +63,9 @@ export const EditRoomPage = () => {
                 rules: rulesString,
                 description: property.description || ''
             });
+            
+            // Set existing images
+            setExistingImages(property.images || []);
         } catch (error) {
             showError('Failed to load property data');
             navigate('/dashboard');
@@ -81,11 +88,57 @@ export const EditRoomPage = () => {
         });
     };
 
+    const handleImageUpload = (e) => {
+        const files = Array.from(e.target.files);
+        const totalImages = existingImages.length - imagesToRemove.length + newImages.length + files.length;
+        
+        if (totalImages > 5) {
+            showError('Maximum 5 images allowed');
+            return;
+        }
+        
+        // Validate file types
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+        if (invalidFiles.length > 0) {
+            showError('Please upload only JPG, PNG, or WebP images');
+            return;
+        }
+        
+        // Validate file sizes (max 5MB per file)
+        const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+        if (oversizedFiles.length > 0) {
+            showError('Each image must be less than 5MB');
+            return;
+        }
+        
+        setNewImages(prev => [...prev, ...files]);
+    };
+
+    const removeExistingImage = (imageUrl) => {
+        setImagesToRemove(prev => [...prev, imageUrl]);
+    };
+
+    const restoreExistingImage = (imageUrl) => {
+        setImagesToRemove(prev => prev.filter(url => url !== imageUrl));
+    };
+
+    const removeNewImage = (index) => {
+        setNewImages(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         
         if (!user) {
             navigate('/login');
+            return;
+        }
+
+        // Validate minimum images
+        const totalImages = existingImages.length - imagesToRemove.length + newImages.length;
+        if (totalImages < 3) {
+            showError('At least 3 images are required');
             return;
         }
 
@@ -110,7 +163,9 @@ export const EditRoomPage = () => {
                 preferred_tenant: formData.genderPreference,
                 amenities: formData.amenities,
                 house_rules: rulesArray,
-                description: formData.description
+                description: formData.description,
+                images: newImages, // New images to upload
+                images_to_remove: imagesToRemove // Existing images to remove
             };
 
             await propertyService.updateProperty(id, propertyData);
@@ -251,6 +306,152 @@ export const EditRoomPage = () => {
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                     placeholder="e.g., Satellite, Vastrapur"
                                 />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Property Images */}
+                    <div className="bg-primary-50 px-8 py-6 border-y border-gray-100">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900">Property Images</h2>
+                        </div>
+                    </div>
+                    <div className="px-8 py-6">
+                        {/* Current Images */}
+                        {existingImages.length > 0 && (
+                            <div className="mb-6">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-3">Current Images</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                                    {existingImages.map((image, idx) => (
+                                        <div key={idx} className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+                                            imagesToRemove.includes(image) 
+                                                ? 'border-red-300 opacity-50' 
+                                                : 'border-gray-200'
+                                        }`}>
+                                            <div className="aspect-square">
+                                                <img 
+                                                    src={getImageUrl(image)} 
+                                                    alt={`Property ${idx + 1}`} 
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            {imagesToRemove.includes(image) ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => restoreExistingImage(image)}
+                                                    className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1.5 hover:bg-green-600 transition-colors"
+                                                    title="Restore image"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                    </svg>
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeExistingImage(image)}
+                                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors"
+                                                    title="Remove image"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            )}
+                                            {imagesToRemove.includes(image) && (
+                                                <div className="absolute inset-0 bg-red-500 bg-opacity-20 flex items-center justify-center">
+                                                    <span className="text-red-600 font-bold text-sm">REMOVED</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Add New Images */}
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                                {existingImages.length > 0 ? 'Add More Images' : 'Upload Images'}
+                                <span className="text-sm font-normal text-gray-500 ml-2">
+                                    (Minimum 3 images total required)
+                                </span>
+                            </h3>
+                            
+                            <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer relative">
+                                <input 
+                                    type="file" 
+                                    multiple 
+                                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                                    onChange={handleImageUpload} 
+                                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                                />
+                                <div className="text-gray-500">
+                                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <p className="font-medium">Click to upload new photos</p>
+                                    <p className="text-xs mt-1">or drag and drop here</p>
+                                    <p className="text-xs mt-2 text-blue-600">
+                                        📸 JPG, PNG, WebP • Max 5MB each • Up to 5 images total
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* New Images Preview */}
+                            {newImages.length > 0 && (
+                                <div className="mt-4">
+                                    <h4 className="text-sm font-semibold text-gray-700 mb-2">New Images to Upload</h4>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                                        {newImages.map((file, idx) => (
+                                            <div key={idx} className="relative rounded-lg overflow-hidden border-2 border-green-200">
+                                                <div className="aspect-square">
+                                                    <img 
+                                                        src={URL.createObjectURL(file)} 
+                                                        alt={`New ${idx + 1}`} 
+                                                        className="w-full h-full object-cover" 
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeNewImage(idx)}
+                                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                                <div className="absolute bottom-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                                                    NEW
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Image Count Summary */}
+                            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-blue-700 font-medium">
+                                        Total Images: {existingImages.length - imagesToRemove.length + newImages.length} / 5
+                                    </span>
+                                    <span className={`font-medium ${
+                                        existingImages.length - imagesToRemove.length + newImages.length >= 3 
+                                            ? 'text-green-600' 
+                                            : 'text-red-600'
+                                    }`}>
+                                        {existingImages.length - imagesToRemove.length + newImages.length >= 3 
+                                            ? '✓ Minimum requirement met' 
+                                            : `Need ${3 - (existingImages.length - imagesToRemove.length + newImages.length)} more image(s)`
+                                        }
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>

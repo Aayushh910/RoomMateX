@@ -26,8 +26,8 @@ export const ContactPage = () => {
             answer: 'After signing up, you\'ll receive an OTP via email. Enter the code to verify your account. Verified users get a blue badge and can list properties.'
         },
         {
-            question: 'Can I contact multiple room owners?',
-            answer: 'Yes! You can send contact requests to as many properties as you like. Once the owner accepts, you\'ll get their contact details.'
+            question: 'How do I contact room owners?',
+            answer: 'You can contact property owners directly using the contact information provided in the property listing. All contact details are visible to verified users.'
         },
         {
             question: 'How do I know if a listing is genuine?',
@@ -64,7 +64,7 @@ export const ContactPage = () => {
         <div className="min-h-screen flex flex-col pt-20">
             <Navbar />
             <div className="flex-1 py-8 overflow-y-auto">
-                <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+                <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 space-y-8">
 
                     {/* FAQ Section */}
                     <div>
@@ -73,16 +73,22 @@ export const ContactPage = () => {
                             <p className="text-gray-600">Find quick answers to common questions</p>
                         </div>
 
-                        <div className="max-w-3xl mx-auto space-y-3">
+                        <div className="max-w-4xl mx-auto space-y-3">
                             {faqs.map((faq, index) => (
-                                <div key={index} className="glass-card border border-gray-200 rounded-xl overflow-hidden">
+                                <div key={index} className="border border-primary-100 rounded-xl overflow-hidden shadow-sm">
                                     <button
                                         onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                                        className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                                        className={`w-full px-6 py-4 flex items-center justify-between text-left transition-colors ${
+                                            openFaq === index ? 'bg-primary-600' : 'bg-white hover:bg-primary-50'
+                                        }`}
                                     >
-                                        <span className="font-semibold text-gray-900">{faq.question}</span>
+                                        <span className={`font-semibold flex-1 text-center ${
+                                            openFaq === index ? 'text-white' : 'text-gray-900'
+                                        }`}>{faq.question}</span>
                                         <svg
-                                            className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${openFaq === index ? 'rotate-180' : ''}`}
+                                            className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 ${
+                                                openFaq === index ? 'rotate-180 text-white' : 'text-primary-400'
+                                            }`}
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -91,13 +97,21 @@ export const ContactPage = () => {
                                         </svg>
                                     </button>
                                     {openFaq === index && (
-                                        <div className="px-6 pb-4 text-gray-600 border-t border-gray-100 pt-4">
+                                        <div className="px-6 pb-4 text-gray-600 bg-primary-50 border-t border-primary-100 pt-4">
                                             {faq.answer}
                                         </div>
                                     )}
                                 </div>
                             ))}
                         </div>
+                    </div>
+
+                    {/* Scroll Down Nudge */}
+                    <div className="flex flex-col items-center gap-1 py-2 animate-bounce">
+                        <p className="text-sm text-gray-400 font-medium tracking-wide">Confused?? Scroll down</p>
+                        <svg className="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
                     </div>
 
                     {/* Contact Section */}

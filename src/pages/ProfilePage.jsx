@@ -9,11 +9,12 @@ import { userService } from '../services/userService';
 import { getImageUrl } from '../utils/imageUtils';
 import { ImageCropModal } from '../components/modal/ImageCropModal';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { checkProfileCompleteness } from '../utils/profileUtils';
 
 export const ProfilePage = () => {
     const { user, updateUser, setUser } = useAuth();
     const navigate = useNavigate();
-    const { showError } = useToast();
+    const { showError, showSuccess } = useToast();
     const fileInputRef = useRef(null);
     const [activeTab, setActiveTab] = useState('personal');
     const [isEditing, setIsEditing] = useState(false);
@@ -23,6 +24,10 @@ export const ProfilePage = () => {
     const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
     const [showCropModal, setShowCropModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
+    const [showPreview, setShowPreview] = useState(false);
+    const [profileCompleteness, setProfileCompleteness] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [justSaved, setJustSaved] = useState(false);
     
 
 
@@ -91,6 +96,14 @@ export const ProfilePage = () => {
         }
     }, [user]);
 
+    // Check profile completeness
+    useEffect(() => {
+        if (user) {
+            const completeness = checkProfileCompleteness(user);
+            setProfileCompleteness(completeness);
+        }
+    }, [user, formData]); // Re-check when user or form data changes
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -108,29 +121,47 @@ export const ProfilePage = () => {
     };
 
     const handleSave = async () => {
-        // Construct the updates object
-        const updates = {
-            occupation: formData.occupation,
-            age: formData.age ? parseInt(formData.age) : null,
-            bio: formData.about,
-            city: formData.city,
-            phone_number: formData.phone,
-            // Preference fields
-            gender_preference: formData.gender || null,
-            budget_min: formData.budgetMin ? parseInt(formData.budgetMin) : null,
-            budget_max: formData.budgetMax ? parseInt(formData.budgetMax) : null,
-            lifestyle: JSON.stringify(formData.lifestyle || []),
-            interests: JSON.stringify(formData.interests || [])
-        };
-
-        const result = await updateUser(updates);
+        if (isSaving) return; // Prevent multiple saves
         
-        if (result.success) {
-            setIsEditing(false);
-            // Optional: Show success toast
-        } else {
-            // Show error
-            showError(result.error || 'Failed to update profile');
+        try {
+            setIsSaving(true);
+            
+            // Construct the updates object
+            const updates = {
+                occupation: formData.occupation,
+                age: formData.age ? parseInt(formData.age) : null,
+                bio: formData.about,
+                city: formData.city,
+                phone_number: formData.phone,
+                // Preference fields
+                gender_preference: formData.gender || null,
+                budget_min: formData.budgetMin ? parseInt(formData.budgetMin) : null,
+                budget_max: formData.budgetMax ? parseInt(formData.budgetMax) : null,
+                lifestyle: JSON.stringify(formData.lifestyle || []),
+                interests: JSON.stringify(formData.interests || [])
+            };
+
+            const result = await updateUser(updates);
+            
+            if (result.success) {
+                setIsEditing(false);
+                setJustSaved(true);
+                showSuccess('Profile updated successfully! Click "Edit Profile" to make more changes.');
+                console.log('Profile updated successfully');
+                
+                // Reset the justSaved state after 3 seconds
+                setTimeout(() => setJustSaved(false), 3000);
+            } else {
+                // Show error
+                showError(result.error || 'Failed to update profile');
+                console.error('Profile update failed:', result.error);
+            }
+        } catch (error) {
+            // Handle unexpected errors
+            showError('An unexpected error occurred while updating profile');
+            console.error('Unexpected error in handleSave:', error);
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -212,15 +243,15 @@ export const ProfilePage = () => {
     const interestOptions = ['Reading', 'Gaming', 'Music', 'Cooking', 'Travel', 'Fitness', 'Art', 'Movies', 'Tech', 'Outdoors'];
 
     return (
-        <div className="min-h-screen flex flex-col pt-32 bg-gray-50/50">
+        <div className="h-screen flex flex-col overflow-hidden bg-gray-50/50">
             <Navbar />
 
-            <div className="max-w-7xl mx-auto px-6 mt-8 flex-1 w-full">
-                <div className="flex flex-col md:flex-row gap-8">
+            <div className="max-w-7xl mx-auto px-6 w-full flex-1 overflow-hidden" style={{paddingTop: '88px'}}>
+                <div className="flex flex-col md:flex-row gap-8 h-full py-6">
 
                     {/* Left Sidebar: Profile Card */}
-                    <div className="md:w-1/3 space-y-6">
-                        <div className="glass-card rounded-2xl p-6 text-center sticky top-32">
+                    <div className="md:w-1/3 flex flex-col overflow-y-auto">
+                        <div className="glass-card rounded-2xl p-6 text-center">
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -259,9 +290,38 @@ export const ProfilePage = () => {
                             <p className="text-gray-500 mb-4">{user?.city || 'No Location Set'}</p>
 
                             {!user?.is_verified ? (
-                                <button onClick={handleVerifyClick} className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all text-sm mb-4">
-                                    Verify Identity
-                                </button>
+                                <div className="space-y-3 mb-4">
+                                    {profileCompleteness && !profileCompleteness.isComplete && (
+                                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <span className="text-xs font-semibold text-amber-800">Complete profile to verify</span>
+                                            </div>
+                                            <div className="w-full bg-amber-200 rounded-full h-1.5 mb-2">
+                                                <div 
+                                                    className="bg-amber-500 h-1.5 rounded-full transition-all duration-300" 
+                                                    style={{ width: `${profileCompleteness.completionPercentage}%` }}
+                                                ></div>
+                                            </div>
+                                            <p className="text-xs text-amber-700">
+                                                {profileCompleteness.completionPercentage}% complete - {profileCompleteness.missingFields.length} fields missing
+                                            </p>
+                                        </div>
+                                    )}
+                                    <button 
+                                        onClick={handleVerifyClick} 
+                                        disabled={profileCompleteness && !profileCompleteness.isComplete}
+                                        className={`w-full py-2.5 rounded-xl font-bold shadow-lg transition-all text-sm ${
+                                            profileCompleteness && !profileCompleteness.isComplete
+                                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-gray-300/20'
+                                                : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5'
+                                        }`}
+                                    >
+                                        {profileCompleteness && !profileCompleteness.isComplete ? 'Complete Profile First' : 'Verify Identity'}
+                                    </button>
+                                </div>
                             ) : (
                                 <div className="flex flex-col gap-2 w-full">
                                     <div className="w-full py-2.5 bg-green-50 text-green-700 rounded-xl font-bold border border-green-200 text-sm flex items-center justify-center gap-2">
@@ -288,6 +348,13 @@ export const ProfilePage = () => {
 
                             <div className="border-t border-gray-100 pt-6 mt-6 space-y-3">
                                 <button
+                                    onClick={() => setShowPreview(true)}
+                                    className="w-full py-2.5 text-sm font-medium text-primary-600 bg-primary-50 border border-primary-200 rounded-lg hover:bg-primary-100 hover:border-primary-300 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                    Preview Profile
+                                </button>
+                                <button
                                     onClick={handlePasswordClick}
                                     className="w-full py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2"
                                 >
@@ -306,38 +373,61 @@ export const ProfilePage = () => {
                     </div>
 
                     {/* Right Content: Tabs & Forms */}
-                    <div className="md:w-2/3">
-                        <div className="glass-card rounded-2xl overflow-hidden min-h-[600px] flex flex-col">
+                    <div className="md:w-2/3 flex flex-col overflow-hidden">
+                        <div className="glass-card rounded-2xl overflow-hidden flex flex-col flex-1">
                             {/* Tab Headers */}
                             <div className="flex border-b border-gray-100 bg-white/50 backdrop-blur-sm">
-                                {['personal', 'preferences'].map((tab) => (
+                                <button
+                                    onClick={() => setActiveTab('personal')}
+                                    className={`flex-1 py-4 text-sm font-bold text-center capitalize transition-all relative ${activeTab === 'personal' ? 'text-primary-600 bg-primary-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                                >
+                                    Personal
+                                    {activeTab === 'personal' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary-600"></div>}
+                                </button>
+                                <div className="flex-1 relative group">
                                     <button
-                                        key={tab}
-                                        onClick={() => setActiveTab(tab)}
-                                        className={`flex-1 py-4 text-sm font-bold text-center capitalize transition-all relative ${activeTab === tab
-                                            ? 'text-primary-600 bg-primary-50/50'
-                                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                                            }`}
+                                        onClick={() => setActiveTab('preferences')}
+                                        className={`w-full py-4 text-sm font-bold text-center capitalize transition-all relative ${activeTab === 'preferences' ? 'text-primary-600 bg-primary-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                                     >
-                                        {tab}
-                                        {activeTab === tab && (
-                                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary-600"></div>
+                                        Preferences
+                                        {activeTab === 'preferences' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary-600"></div>}
+                                        {activeTab !== 'preferences' && (
+                                            <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary-100 text-primary-600 animate-pulse">✨ Fill me</span>
                                         )}
                                     </button>
-                                ))}
+                                    {activeTab !== 'preferences' && (
+                                        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 bg-gray-900 text-white text-xs rounded-xl px-3 py-2.5 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                            <p className="font-semibold mb-0.5">Make your profile attractive! ✨</p>
+                                            <p className="text-gray-300">Profiles with preferences get 3x more matches. Add your lifestyle & interests!</p>
+                                            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-gray-900 rotate-45"></div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
-                            <div className="p-8 flex-1">
+                            <div className="p-8 flex-1 overflow-y-auto">
                                 <div className="flex justify-between items-center mb-8">
                                     <h3 className="text-xl font-bold text-gray-900 capitalize">{activeTab} Details</h3>
                                     <button
-                                        onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                                        onClick={() => {
+                                            if (isEditing) {
+                                                handleSave();
+                                            } else {
+                                                setIsEditing(true);
+                                                setJustSaved(false); // Reset highlight when starting to edit
+                                            }
+                                        }}
+                                        disabled={isSaving}
                                         className={`px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-md ${isEditing
-                                            ? 'bg-green-600 text-white hover:bg-green-700 shadow-green-500/20'
-                                            : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                            ? isSaving 
+                                                ? 'bg-gray-400 text-white cursor-not-allowed shadow-gray-400/20'
+                                                : 'bg-green-600 text-white hover:bg-green-700 shadow-green-500/20'
+                                            : justSaved
+                                                ? 'bg-blue-50 text-blue-700 border-2 border-blue-300 hover:border-blue-400 hover:bg-blue-100 animate-pulse'
+                                                : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                             }`}
                                     >
-                                        {isEditing ? 'Save Changes' : 'Edit Profile'}
+                                        {isEditing ? (isSaving ? 'Saving...' : 'Save Changes') : 'Edit Profile'}
                                     </button>
                                 </div>
 
@@ -529,6 +619,111 @@ export const ProfilePage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Profile Preview Modal */}
+            {showPreview && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowPreview(false)}>
+                    <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                            <div>
+                                <p className="text-xs text-gray-400 font-medium">👁️ This is how others see you</p>
+                                <h3 className="text-base font-bold text-gray-900">Profile Preview</h3>
+                            </div>
+                            <button onClick={() => setShowPreview(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+
+                        {/* Profile Card */}
+                        <div className="p-6">
+                            {/* Avatar + Name */}
+                            <div className="flex items-center gap-4 mb-5">
+                                <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-primary-100 to-indigo-100">
+                                    {user?.profile_photo ? (
+                                        <img src={getImageUrl(user.profile_photo)} alt={user.full_name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-primary-600 text-3xl font-bold">
+                                            {user?.full_name?.[0]?.toUpperCase() || 'U'}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <h4 className="text-lg font-bold text-gray-900 truncate">{user?.full_name || 'No Name'}</h4>
+                                        {user?.is_verified && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-bold rounded-full border border-blue-100">
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                                Verified
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-sm text-gray-500">
+                                        {formData.occupation && <span>{formData.occupation}</span>}
+                                        {formData.age && <span>· {formData.age} yrs</span>}
+                                        {formData.city && (
+                                            <span className="flex items-center gap-1">
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                {formData.city}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Bio */}
+                            {formData.about && (
+                                <p className="text-sm text-gray-600 mb-5 leading-relaxed bg-gray-50 rounded-xl px-4 py-3">{formData.about}</p>
+                            )}
+
+                            {/* Budget */}
+                            {(formData.budgetMin || formData.budgetMax) && (
+                                <div className="flex items-center gap-2 mb-4 text-sm">
+                                    <span className="text-gray-500">Budget:</span>
+                                    <span className="font-semibold text-gray-800">
+                                        {formData.budgetMin && formData.budgetMax
+                                            ? `₹${formData.budgetMin} – ₹${formData.budgetMax}`
+                                            : formData.budgetMin ? `From ₹${formData.budgetMin}` : `Up to ₹${formData.budgetMax}`}
+                                    </span>
+                                    {formData.gender && formData.gender !== '' && <span className="ml-2 px-2 py-0.5 bg-purple-50 text-purple-600 text-xs font-medium rounded-full border border-purple-100">{formData.gender} preferred</span>}
+                                </div>
+                            )}
+
+                            {/* Lifestyle */}
+                            {formData.lifestyle?.length > 0 && (
+                                <div className="mb-4">
+                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Lifestyle</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {formData.lifestyle.map(tag => (
+                                            <span key={tag} className="px-3 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full border border-primary-100">{tag}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Interests */}
+                            {formData.interests?.length > 0 && (
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Interests</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {formData.interests.map(tag => (
+                                            <span key={tag} className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-medium rounded-full border border-indigo-100">{tag}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Empty state */}
+                            {!formData.about && !formData.lifestyle?.length && !formData.interests?.length && (
+                                <div className="text-center py-4 text-sm text-gray-400">
+                                    <p>Your profile looks a bit empty.</p>
+                                    <p className="text-xs mt-1">Add a bio, lifestyle tags & interests to stand out!</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Image Crop Modal */}
             {showCropModal && selectedImage && (
