@@ -229,6 +229,9 @@ async def update_property(
     # Optional new images
     images: List[UploadFile] = File(default=[]),
     
+    # Optional images to remove
+    images_to_remove: Optional[str] = Form(None),
+    
     # Dependencies
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -244,6 +247,7 @@ async def update_property(
     # Parse amenities and house_rules if provided
     amenities_list = None
     house_rules_list = None
+    images_to_remove_list = None
     
     if amenities:
         try:
@@ -261,6 +265,15 @@ async def update_property(
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 content={"detail": "Invalid house_rules format"}
+            )
+    
+    if images_to_remove:
+        try:
+            images_to_remove_list = json.loads(images_to_remove)
+        except json.JSONDecodeError:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"detail": "Invalid images_to_remove format"}
             )
     
     # Create update data object
@@ -284,6 +297,7 @@ async def update_property(
         property_id=property_id,
         property_data=update_data,
         images=images if images else None,
+        images_to_remove=images_to_remove_list,
         current_user=current_user,
         db=db
     )
@@ -362,16 +376,10 @@ def get_property_reviews(
     skip = (page - 1) * limit
     reviews, total = ReviewService.get_property_reviews(property_id, db, skip, limit)
     
-    # Transform reviews to include user name
+    # Transform reviews to include user name and profile photo
     review_responses = []
     for review in reviews:
-        review_responses.append(ReviewResponse(
-            id=review.id,
-            user_name=review.user.full_name,
-            rating=review.rating,
-            comment=review.comment,
-            created_at=review.created_at
-        ))
+        review_responses.append(ReviewResponse.from_orm(review))
     
     # Calculate total pages
     total_pages = (total + limit - 1) // limit

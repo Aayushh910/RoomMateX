@@ -46,6 +46,12 @@ async def options_users():
     return {}
 
 
+@router.options("/users/{user_id}")
+async def options_user_actions():
+    """Handle CORS preflight for user actions (view, block, delete)"""
+    return {}
+
+
 @router.options("/properties")
 async def options_properties():
     """Handle CORS preflight for properties"""
@@ -591,6 +597,73 @@ def block_user(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/users/{user_id}")
+def delete_user(
+    user_id: str,
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Permanently delete a user and all associated data from the database.
+    This action cannot be undone.
+    """
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Get user's properties for cleanup
+        user_properties = db.query(Property).filter(Property.owner_id == user_id).all()
+        
+        # Delete all user's properties and their associated data
+        for property_obj in user_properties:
+            # Delete property images, amenities, house rules, reviews, reports, wishlists
+            from app.models.property import PropertyImage, PropertyAmenity, HouseRule, Review, Report, Wishlist
+            
+            # Delete property images
+            db.query(PropertyImage).filter(PropertyImage.property_id == property_obj.id).delete()
+            
+            # Delete property amenities
+            db.query(PropertyAmenity).filter(PropertyAmenity.property_id == property_obj.id).delete()
+            
+            # Delete house rules
+            db.query(HouseRule).filter(HouseRule.property_id == property_obj.id).delete()
+            
+            # Delete reviews for this property
+            db.query(Review).filter(Review.property_id == property_obj.id).delete()
+            
+            # Delete reports for this property
+            db.query(Report).filter(Report.property_id == property_obj.id).delete()
+            
+            # Delete wishlists for this property
+            db.query(Wishlist).filter(Wishlist.property_id == property_obj.id).delete()
+            
+            # Delete the property itself
+            db.delete(property_obj)
+        
+        # Delete user's reviews on other properties
+        from app.models.property import Review, Report, Wishlist
+        db.query(Review).filter(Review.user_id == user_id).delete()
+        
+        # Delete user's reports
+        db.query(Report).filter(Report.user_id == user_id).delete()
+        
+        # Delete user's wishlists
+        db.query(Wishlist).filter(Wishlist.user_id == user_id).delete()
+        
+        # Finally, delete the user
+        db.delete(user)
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": f"User '{user.full_name}' and all associated data deleted successfully"
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete user: {str(e)}")
 
 
 @router.get("/users/{user_id}")

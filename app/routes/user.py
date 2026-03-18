@@ -166,7 +166,6 @@ def delete_user_account(
     - All properties owned by user (with images, amenities, house rules)
     - All reviews written by user
     - All wishlist entries
-    - All contact requests (sent and received)
     - All reports submitted by user
     - User account
     
