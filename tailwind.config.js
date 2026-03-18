@@ -43,8 +43,13 @@ export default {
         'slide-up': 'slideUp 0.5s ease-out',
         'slide-down': 'slideDown 0.3s ease-out',
         'blob': 'blob 7s infinite',
+        'bounce-once': 'bounceOnce 0.6s ease 2',
       },
       keyframes: {
+        bounceOnce: {
+          '0%,100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-4px)' },
+        },
         fadeIn: {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
