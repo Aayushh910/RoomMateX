@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
@@ -11,9 +11,17 @@ export const Navbar = () => {
   const { theme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -40,15 +48,19 @@ export const Navbar = () => {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 pt-4 px-4">
-      <nav className="max-w-7xl mx-auto bg-white/80 backdrop-blur-xl shadow-lg shadow-gray-200/50 border border-gray-100 rounded-2xl transition-all duration-300">
+      <nav className={`max-w-7xl mx-auto backdrop-blur-xl border border-gray-100 rounded-2xl transition-all duration-300 ${
+        scrolled
+          ? 'bg-white/95 shadow-xl shadow-gray-300/40 scale-[0.99]'
+          : 'bg-white/80 shadow-lg shadow-gray-200/50'
+      }`}>
         <div className="px-6 md:px-8">
           <div className="flex justify-between h-14 items-center">
             {/* Logo */}
             <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2.5 group">
               <img 
-                src="/logos/logocrop.svg" 
+                src="/logos/logocrop.png"
                 alt="RoomMateX Logo" 
-                className="w-8 h-8 rounded-[18px] transform group-hover:scale-110 transition-all duration-300"
+                className="w-8 h-8 rounded-[14px] transform group-hover:scale-110 transition-all duration-300"
               />
               <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight group-hover:from-blue-700 group-hover:to-purple-700 transition-all duration-300">
                 RoomMateX
@@ -57,19 +69,32 @@ export const Navbar = () => {
 
             {/* Desktop Navigation */}
             {user && (
-              <div className="hidden md:flex items-center space-x-6">
-                <Link to="/dashboard" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">Dashboard</Link>
-                <Link to="/rooms" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">Find Rooms</Link>
-                <Link to="/add-room" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">List Room</Link>
-                <Link to="/contact" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">Contact</Link>
+              <div className="hidden md:flex items-center space-x-1">
+                {[{to:'/dashboard',label:'Dashboard'},{to:'/rooms',label:'Find Rooms'},{to:'/add-room',label:'List Room'},{to:'/contact',label:'Contact'}].map(({to,label}) => (
+                  <Link key={to} to={to} className={`px-3 py-1.5 rounded-xl font-semibold text-sm transition-all duration-200 relative ${
+                    location.pathname === to
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                  }`}>
+                    {label}
+                    {location.pathname === to && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-blue-500 rounded-full"></span>}
+                  </Link>
+                ))}
               </div>
             )}
 
             {!user && (
-              <div className="hidden md:flex items-center space-x-6">
-                <Link to="/" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">Home</Link>
-                <Link to="/rooms" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">Find Rooms</Link>
-                <Link to="/contact" className="text-gray-600 hover:text-blue-600 font-semibold transition-all duration-200 text-sm">Contact</Link>
+              <div className="hidden md:flex items-center space-x-1">
+                {[{to:'/',label:'Home'},{to:'/rooms',label:'Find Rooms'},{to:'/contact',label:'Contact'}].map(({to,label}) => (
+                  <Link key={to} to={to} className={`px-3 py-1.5 rounded-xl font-semibold text-sm transition-all duration-200 relative ${
+                    location.pathname === to
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                  }`}>
+                    {label}
+                    {location.pathname === to && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-blue-500 rounded-full"></span>}
+                  </Link>
+                ))}
               </div>
             )}
 

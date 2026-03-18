@@ -3,187 +3,76 @@ import { useNavigate } from 'react-router-dom';
 import { Bell, AlertCircle, CheckCircle, XCircle, Clock, X, Check, Home, FileText } from 'lucide-react';
 import { notificationService } from '../../services/notificationService';
 
-// Reporter Notification Card Component
-const ReporterNotificationCard = ({ report, onMarkAsRead, onViewProperty, getStatusIcon, getStatusColor }) => (
-  <div
-    className={`bg-gray-50 rounded-xl overflow-hidden border transition-all hover:shadow-md ${
-      report.is_new ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'
-    }`}
-  >
-    <div className="p-4 bg-white border-b border-gray-100">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            {report.is_new && (
-              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded">NEW</span>
-            )}
-            <h3 className="text-base font-bold text-gray-900 line-clamp-1">{report.property_title}</h3>
-          </div>
-          <p className="text-xs text-gray-500 mb-2">
-            Reported on {new Date(report.created_at).toLocaleDateString()}
-          </p>
-          <div className="flex items-center gap-2">
-            {getStatusIcon(report.status)}
-            <span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${getStatusColor(report.status)}`}>
-              {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-            </span>
-          </div>
+const StatusBadge = ({ status }) => {
+  const config = {
+    fixed:    { icon: <CheckCircle className="w-3.5 h-3.5" />, label: 'Fixed',    cls: 'bg-green-50 text-green-700 border-green-200' },
+    rejected: { icon: <XCircle    className="w-3.5 h-3.5" />, label: 'Rejected', cls: 'bg-red-50 text-red-700 border-red-200' },
+    pending:  { icon: <Clock      className="w-3.5 h-3.5" />, label: 'Pending',  cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+  };
+  const s = config[status] || config.pending;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border ${s.cls}`}>
+      {s.icon} {s.label}
+    </span>
+  );
+};
+
+const NotificationCard = ({ report, onMarkAsRead, onViewProperty, isOwner }) => (
+  <div className={`rounded-xl border bg-white transition-all hover:shadow-sm ${report.is_new ? 'border-primary-300 ring-1 ring-primary-100' : 'border-gray-200'}`}>
+    {/* Card Header */}
+    <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-3">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap mb-1">
+          {report.is_new && <span className="px-2 py-0.5 bg-primary-100 text-primary-700 text-[10px] font-bold rounded-full uppercase tracking-wide">New</span>}
+          <StatusBadge status={report.status} />
         </div>
+        <p className="font-semibold text-gray-900 text-sm truncate">{report.property_title}</p>
+        <p className="text-xs text-gray-400 mt-0.5">
+          {isOwner ? `Reported by ${report.reporter_name} · ` : ''}
+          {new Date(report.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+        </p>
       </div>
-    </div>
-
-    <div className="p-4 space-y-3">
-      <div>
-        <h4 className="text-xs font-bold text-gray-700 mb-1">Your Report:</h4>
-        <p className="text-sm text-gray-900 bg-white p-3 rounded-lg border border-gray-200">{report.reason}</p>
-      </div>
-
-      {report.admin_notice && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-          <div className="flex items-start gap-2">
-            <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-xs font-bold text-green-900 mb-1">Admin Response:</h4>
-              <p className="text-sm text-green-800">{report.admin_notice}</p>
-              <p className="text-xs text-green-600 mt-1">
-                Updated {new Date(report.updated_at).toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {report.owner_notice && (
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-          <div className="flex items-start gap-2">
-            <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <AlertCircle className="w-4 h-4 text-orange-600" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-xs font-bold text-orange-900 mb-1">Notice Sent to Owner:</h4>
-              <p className="text-sm text-orange-800">{report.owner_notice}</p>
-              <p className="text-xs text-orange-600 mt-1">(This message was sent to the property owner)</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!report.admin_notice && !report.owner_notice && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-yellow-600" />
-            <p className="text-xs text-yellow-800 font-medium">
-              Your report is under review. We'll notify you once admin takes action.
-            </p>
-          </div>
-        </div>
-      )}
-
-      <div className="flex gap-2">
+      {report.is_new && (
         <button
-          onClick={() => onViewProperty(report.property_id)}
-          className="flex-1 py-2 bg-primary-600 text-white rounded-lg text-sm font-bold hover:bg-primary-700 transition-colors"
+          onClick={() => onMarkAsRead(report.id)}
+          title="Mark as read"
+          className="flex-shrink-0 p-1.5 rounded-lg bg-gray-100 hover:bg-green-100 hover:text-green-600 text-gray-400 transition-colors"
         >
-          View Property
+          <Check className="w-3.5 h-3.5" />
         </button>
-        {report.is_new && (
-          <button
-            onClick={() => onMarkAsRead(report.id)}
-            className="px-4 py-2 bg-green-50 text-green-600 rounded-lg text-sm font-bold hover:bg-green-100 transition-colors flex items-center gap-1"
-            title="Mark as Read"
-          >
-            <Check className="w-4 h-4" />
-            Read
-          </button>
-        )}
-      </div>
-    </div>
-  </div>
-);
-
-// Owner Notification Card Component
-const OwnerNotificationCard = ({ report, onMarkAsRead, onViewProperty, getStatusIcon, getStatusColor }) => (
-  <div
-    className={`bg-gray-50 rounded-xl overflow-hidden border transition-all hover:shadow-md ${
-      report.is_new ? 'border-orange-400 ring-2 ring-orange-100' : 'border-gray-200'
-    }`}
-  >
-    <div className="p-4 bg-white border-b border-gray-100">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            {report.is_new && (
-              <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-bold rounded">NEW</span>
-            )}
-            <h3 className="text-base font-bold text-gray-900 line-clamp-1">{report.property_title}</h3>
-          </div>
-          <p className="text-xs text-gray-500 mb-2">
-            Reported by {report.reporter_name} on {new Date(report.created_at).toLocaleDateString()}
-          </p>
-          <div className="flex items-center gap-2">
-            {getStatusIcon(report.status)}
-            <span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${getStatusColor(report.status)}`}>
-              {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-            </span>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
 
-    <div className="p-4 space-y-3">
-      <div>
-        <h4 className="text-xs font-bold text-gray-700 mb-1">Report Reason:</h4>
-        <p className="text-sm text-gray-900 bg-white p-3 rounded-lg border border-gray-200">{report.reason}</p>
+    {/* Reason */}
+    <div className="px-4 pb-3">
+      <p className="text-xs font-medium text-gray-500 mb-1">{isOwner ? 'Report Reason' : 'Your Report'}</p>
+      <p className="text-sm text-gray-700 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100 line-clamp-2">{report.reason}</p>
+    </div>
+
+    {/* Admin / Owner Notice */}
+    {(report.admin_notice || report.owner_notice) ? (
+      <div className="mx-4 mb-3 rounded-lg border border-primary-100 bg-primary-50 px-3 py-2.5">
+        <p className="text-xs font-semibold text-primary-700 mb-0.5">
+          {isOwner ? '📋 Admin Notice' : '✅ Admin Response'}
+        </p>
+        <p className="text-sm text-primary-800">{isOwner ? report.owner_notice : (report.admin_notice || report.owner_notice)}</p>
+        <p className="text-[10px] text-primary-500 mt-1">{new Date(report.updated_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
       </div>
-
-      {report.owner_notice && (
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-          <div className="flex items-start gap-2">
-            <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <AlertCircle className="w-4 h-4 text-orange-600" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-xs font-bold text-orange-900 mb-1">Admin Notice:</h4>
-              <p className="text-sm text-orange-800">{report.owner_notice}</p>
-              <p className="text-xs text-orange-600 mt-1">
-                Updated {new Date(report.updated_at).toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!report.owner_notice && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-yellow-600" />
-            <p className="text-xs text-yellow-800 font-medium">
-              This report is under admin review.
-            </p>
-          </div>
-        </div>
-      )}
-
-      <div className="flex gap-2">
-        <button
-          onClick={() => onViewProperty(report.property_id)}
-          className="flex-1 py-2 bg-primary-600 text-white rounded-lg text-sm font-bold hover:bg-primary-700 transition-colors"
-        >
-          View Property
-        </button>
-        {report.is_new && (
-          <button
-            onClick={() => onMarkAsRead(report.id)}
-            className="px-4 py-2 bg-green-50 text-green-600 rounded-lg text-sm font-bold hover:bg-green-100 transition-colors flex items-center gap-1"
-            title="Mark as Read"
-          >
-            <Check className="w-4 h-4" />
-            Read
-          </button>
-        )}
+    ) : (
+      <div className="mx-4 mb-3 rounded-lg border border-yellow-100 bg-yellow-50 px-3 py-2 flex items-center gap-2">
+        <Clock className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />
+        <p className="text-xs text-yellow-700">Under review — we'll notify you once admin responds.</p>
       </div>
+    )}
+
+    {/* Footer */}
+    <div className="px-4 pb-4">
+      <button
+        onClick={() => onViewProperty(report.property_id)}
+        className="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-semibold transition-colors"
+      >
+        View Property
+      </button>
     </div>
   </div>
 );
@@ -197,9 +86,7 @@ export const NotificationsModal = ({ isOpen, onClose, onUnreadCountChange }) => 
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (isOpen) {
-      fetchNotifications();
-    }
+    if (isOpen) fetchNotifications();
   }, [isOpen]);
 
   const fetchNotifications = async () => {
@@ -211,7 +98,7 @@ export const NotificationsModal = ({ isOpen, onClose, onUnreadCountChange }) => 
       ]);
       setReports(reportsData.reports);
       setOwnerReports(ownerData.reports);
-    } catch (err) {
+    } catch {
       setError('Failed to load notifications');
     } finally {
       setLoading(false);
@@ -221,40 +108,30 @@ export const NotificationsModal = ({ isOpen, onClose, onUnreadCountChange }) => 
   const handleMarkAsRead = async (reportId) => {
     try {
       await notificationService.markAsRead(reportId);
-      setReports(prev => prev.map(report => 
-        report.id === reportId ? { ...report, is_read: true, is_new: false } : report
-      ));
-      if (onUnreadCountChange) onUnreadCountChange();
-    } catch (err) {
-      // Silently handle mark as read errors
-    }
+      setReports(prev => prev.map(r => r.id === reportId ? { ...r, is_read: true, is_new: false } : r));
+      onUnreadCountChange?.();
+    } catch {}
   };
 
   const handleMarkOwnerAsRead = async (reportId) => {
     try {
       await notificationService.markOwnerAsRead(reportId);
-      setOwnerReports(prev => prev.map(report => 
-        report.id === reportId ? { ...report, owner_is_read: true, is_new: false } : report
-      ));
-      if (onUnreadCountChange) onUnreadCountChange();
-    } catch (err) {
-      // Silently handle mark as read errors
-    }
+      setOwnerReports(prev => prev.map(r => r.id === reportId ? { ...r, owner_is_read: true, is_new: false } : r));
+      onUnreadCountChange?.();
+    } catch {}
   };
 
   const handleMarkAllAsRead = async () => {
     try {
       if (activeTab === 'reports') {
         await notificationService.markAllAsRead();
-        setReports(prev => prev.map(report => ({ ...report, is_read: true, is_new: false })));
+        setReports(prev => prev.map(r => ({ ...r, is_read: true, is_new: false })));
       } else {
         await notificationService.markAllOwnerAsRead();
-        setOwnerReports(prev => prev.map(report => ({ ...report, owner_is_read: true, is_new: false })));
+        setOwnerReports(prev => prev.map(r => ({ ...r, owner_is_read: true, is_new: false })));
       }
-      if (onUnreadCountChange) onUnreadCountChange();
-    } catch (err) {
-      // Silently handle mark all as read errors
-    }
+      onUnreadCountChange?.();
+    } catch {}
   };
 
   const handleViewProperty = (propertyId) => {
@@ -262,165 +139,105 @@ export const NotificationsModal = ({ isOpen, onClose, onUnreadCountChange }) => 
     navigate(`/rooms/${propertyId}`);
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'fixed':
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'rejected':
-        return <XCircle className="w-4 h-4 text-red-600" />;
-      default:
-        return <Clock className="w-4 h-4 text-yellow-600" />;
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'fixed':
-        return 'bg-green-50 text-green-700 border-green-200';
-      case 'rejected':
-        return 'bg-red-50 text-red-700 border-red-200';
-      default:
-        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-    }
-  };
+  const currentList = activeTab === 'reports' ? reports : ownerReports;
+  const unreadCount = currentList.filter(r => r.is_new).length;
 
   if (!isOpen) return null;
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" onClick={onClose} />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col pointer-events-auto" onClick={(e) => e.stopPropagation()}>
-          
-          {/* Header */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Bell className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Notifications</h2>
-                  <p className="text-sm text-gray-600">Updates on reports and properties</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {((activeTab === 'reports' && reports.some(r => r.is_new)) || 
-                  (activeTab === 'owner' && ownerReports.some(r => r.is_new))) && (
-                  <button
-                    onClick={handleMarkAllAsRead}
-                    className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-100 transition-colors flex items-center gap-2"
-                  >
-                    <Check className="w-4 h-4" />
-                    Mark All as Read
-                  </button>
-                )}
-                <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
-            </div>
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col pointer-events-auto" onClick={e => e.stopPropagation()}>
 
-            {/* Tabs */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => setActiveTab('reports')}
-                className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-                  activeTab === 'reports' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <FileText className="w-4 h-4" />
-                My Reports
-                {reports.filter(r => r.is_new).length > 0 && (
-                  <span className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {reports.filter(r => r.is_new).length}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab('owner')}
-                className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-                  activeTab === 'owner' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <Home className="w-4 h-4" />
-                My Properties
-                {ownerReports.filter(r => r.is_new).length > 0 && (
-                  <span className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {ownerReports.filter(r => r.is_new).length}
-                  </span>
-                )}
-              </button>
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 bg-primary-50 rounded-xl flex items-center justify-center">
+                <Bell className="w-5 h-5 text-primary-600" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-gray-900">Notifications</h2>
+                <p className="text-xs text-gray-400">Report updates & property alerts</p>
+              </div>
             </div>
+            <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
           </div>
 
+          {/* Tabs */}
+          <div className="flex gap-1 px-5 py-3 border-b border-gray-100 bg-gray-50">
+            {[
+              { key: 'reports', label: 'My Reports', icon: FileText, count: reports.filter(r => r.is_new).length },
+              { key: 'owner',   label: 'My Properties', icon: Home,     count: ownerReports.filter(r => r.is_new).length },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
+                  activeTab === tab.key ? 'bg-white text-primary-600 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+                {tab.count > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{tab.count}</span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Mark all read */}
+          {unreadCount > 0 && (
+            <div className="px-5 py-2 bg-primary-50 border-b border-primary-100 flex items-center justify-between">
+              <p className="text-xs text-primary-700 font-medium">{unreadCount} unread notification{unreadCount > 1 ? 's' : ''}</p>
+              <button onClick={handleMarkAllAsRead} className="text-xs font-bold text-primary-600 hover:text-primary-800 flex items-center gap-1 transition-colors">
+                <Check className="w-3.5 h-3.5" /> Mark all read
+              </button>
+            </div>
+          )}
+
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                <p className="text-red-700">{error}</p>
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
 
             {loading ? (
               <div className="text-center py-12">
-                <div className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading notifications...</p>
+                <div className="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                <p className="text-sm text-gray-500">Loading...</p>
               </div>
-            ) : activeTab === 'reports' ? (
-              reports.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-                    <FileText className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">No Reports</h3>
-                  <p className="text-gray-600 mb-6">You haven't reported any properties yet</p>
-                  <button
-                    onClick={() => { onClose(); navigate('/rooms'); }}
-                    className="px-6 py-2.5 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-colors"
-                  >
+            ) : currentList.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  {activeTab === 'reports' ? <FileText className="w-7 h-7 text-gray-400" /> : <Home className="w-7 h-7 text-gray-400" />}
+                </div>
+                <p className="font-semibold text-gray-700 mb-1">No notifications yet</p>
+                <p className="text-sm text-gray-400">
+                  {activeTab === 'reports' ? "You haven't reported any properties." : "No reports on your properties."}
+                </p>
+                {activeTab === 'reports' && (
+                  <button onClick={() => { onClose(); navigate('/rooms'); }} className="mt-4 px-5 py-2 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 transition-colors">
                     Browse Properties
                   </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {reports.map((report) => (
-                    <ReporterNotificationCard
-                      key={report.id}
-                      report={report}
-                      onMarkAsRead={handleMarkAsRead}
-                      onViewProperty={handleViewProperty}
-                      getStatusIcon={getStatusIcon}
-                      getStatusColor={getStatusColor}
-                    />
-                  ))}
-                </div>
-              )
+                )}
+              </div>
             ) : (
-              ownerReports.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-                    <Home className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">No Reports</h3>
-                  <p className="text-gray-600">No reports on your properties</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {ownerReports.map((report) => (
-                    <OwnerNotificationCard
-                      key={report.id}
-                      report={report}
-                      onMarkAsRead={handleMarkOwnerAsRead}
-                      onViewProperty={handleViewProperty}
-                      getStatusIcon={getStatusIcon}
-                      getStatusColor={getStatusColor}
-                    />
-                  ))}
-                </div>
-              )
+              currentList.map(report => (
+                <NotificationCard
+                  key={report.id}
+                  report={report}
+                  onMarkAsRead={activeTab === 'reports' ? handleMarkAsRead : handleMarkOwnerAsRead}
+                  onViewProperty={handleViewProperty}
+                  isOwner={activeTab === 'owner'}
+                />
+              ))
             )}
           </div>
         </div>

@@ -91,6 +91,17 @@ export const adminService = {
     return response.data;
   },
 
+  // Delete user permanently
+  deleteUser: async (userId) => {
+    const token = localStorage.getItem('admin_access_token');
+    const response = await api.delete(`/admin/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  },
+
   // Get all properties
   getProperties: async (page = 1, pageSize = 20, filters = {}) => {
     const token = localStorage.getItem('admin_access_token');

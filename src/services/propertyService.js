@@ -98,6 +98,11 @@ export const propertyService = {
       });
     }
     
+    // Add images to remove if provided
+    if (propertyData.images_to_remove && propertyData.images_to_remove.length > 0) {
+      formData.append('images_to_remove', JSON.stringify(propertyData.images_to_remove));
+    }
+    
     const response = await api.put(`/properties/${id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
