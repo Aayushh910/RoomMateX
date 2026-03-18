@@ -17,7 +17,7 @@ class User(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     full_name = Column(String, nullable=False)
-    phone_number = Column(String, nullable=False)
+    phone_number = Column(String, nullable=False)  # Fixed: matches database schema
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     city = Column(String, nullable=False)
@@ -42,6 +42,9 @@ class User(Base):
     otp_code = Column(String, nullable=True)
     otp_expiry = Column(DateTime, nullable=True)
     
+    # Google OAuth
+    google_id = Column(String, nullable=True, unique=True)  # Google user ID
+    
     # Temporary verification flags for sensitive operations
     password_change_verified = Column(Boolean, default=False, nullable=False)
     account_delete_verified = Column(Boolean, default=False, nullable=False)
@@ -55,7 +58,7 @@ class User(Base):
         required_fields = [
             self.full_name,
             self.email,
-            self.phone_number,
+            self.phone_number,  # Fixed: matches the actual column name
             self.city,
             self.occupation,
             self.age

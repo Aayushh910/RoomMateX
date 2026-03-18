@@ -52,7 +52,7 @@ class Property(Base):
     
     # Relationships
     owner = relationship("User", backref="properties")
-    images = relationship("PropertyImage", back_populates="property", cascade="all, delete-orphan")
+    images = relationship("PropertyImage", back_populates="property", cascade="all, delete-orphan", order_by="PropertyImage.created_at")
     amenities = relationship("PropertyAmenity", back_populates="property", cascade="all, delete-orphan")
     house_rules = relationship("HouseRule", back_populates="property", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="property", cascade="all, delete-orphan")
