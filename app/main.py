@@ -17,7 +17,7 @@ app.add_middleware(
         "http://localhost:5173", 
         "http://localhost:3000",
         "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000"
+        "http://127.0.0.1:3000",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
@@ -39,7 +39,7 @@ app.include_router(contact.router)
 
 @app.get("/")
 def root():
-    return {"message": "RoomMateX API is running successfully"}
+    return {"message": "RoomMateX API is running successfully! 🚀"}
 
 
 @app.get("/health")
@@ -56,4 +56,4 @@ async def startup_event():
         print("✓ Database tables created successfully")
     except Exception as e:
         print(f"⚠ Warning: Could not create database tables: {e}")
-        print("⚠ Please ensure PostgreSQL is running and credentials are correct in .env file")
+        print("⚠ Please ensure PostgreSQL is running and credentials are correct")

@@ -5,7 +5,7 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-
+models/__pycache__/
 # ========================
 # Virtual Environment
 # ========================
@@ -13,12 +13,6 @@ venv/
 env/
 ENV/
 .venv/
-
-# Alembic cache
-alembic/__pycache__/
-
-# Python egg files
-*.egg-info/
 
 # ========================
 # Environment variables

@@ -5,14 +5,15 @@ Production-ready FastAPI backend for RoomMateX room/roommate finding platform.
 ## Tech Stack
 
 - **Framework**: FastAPI
-- **Database**: PostgreSQL
+- **Database**: Neon PostgreSQL (Serverless)
 - **ORM**: SQLAlchemy
 - **Authentication**: JWT (JSON Web Tokens)
 - **Password Hashing**: bcrypt
 - **Validation**: Pydantic
 - **Migrations**: Alembic
+- **File Storage**: Cloudinary
 
-## Setup Instructions
+## Local Development Setup
 
 ### 1. Install Dependencies
 
@@ -21,33 +22,31 @@ cd backend
 pip install -r requirements.txt
 ```
 
-### 2. Setup PostgreSQL Database
+### 2. Configure Environment Variables
 
-Install PostgreSQL and create a database:
-
-```sql
-CREATE DATABASE RoomMateX_DB;
-CREATE USER postgres WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE RoomMateX_DB TO postgres;
-```
-
-### 3. Configure Environment Variables
-
-Copy `.env.example` to `.env` in the **root directory** (not in backend folder):
+Copy `.env.example` to `.env` in the **root directory**:
 
 ```bash
 copy .env.example .env
 ```
 
-Edit `.env` in root:
+Edit `.env` with your Neon and Cloudinary credentials:
 ```
-DATABASE_URL=postgresql://postgres:your_password@localhost:5432/roommateX
+DATABASE_URL=postgresql://username:password@ep-example.us-east-2.aws.neon.tech/roommateX?sslmode=require
 SECRET_KEY=your-super-secret-key-change-this
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 FRONTEND_URL=http://localhost:5173
-BACKEND_HOST=0.0.0.0
-BACKEND_PORT=8000
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=roommatex0help@gmail.com
+EMAIL_HOST_PASSWORD=your_app_password
+EMAIL_DEV_MODE=false
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
 
 **Generate a secure SECRET_KEY**:
@@ -55,27 +54,13 @@ BACKEND_PORT=8000
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-**Note**: All environment variables are centralized in the root `.env` file for both frontend and backend.
-
-### 4. Initialize Database
-
-Run migrations:
+### 3. Run the Server
 
 ```bash
-alembic revision --autogenerate -m "Initial migration"
-alembic upgrade head
-```
-
-Or let SQLAlchemy create tables automatically (already configured in main.py).
-
-### 5. Run the Server
-
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Server will start at: `http://localhost:8000`
-
 API Documentation: `http://localhost:8000/docs`
 
 ## API Endpoints
@@ -95,21 +80,6 @@ Content-Type: application/json
   "city": "New York",
   "role": "room_seeker"
 }
-
-Response (201):
-{
-  "message": "User registered successfully",
-  "user": {
-    "id": "uuid",
-    "full_name": "John Doe",
-    "email": "john@example.com",
-    "role": "room_seeker",
-    "city": "New York",
-    "phone_number": "+1234567890",
-    "is_active": true,
-    "created_at": "2024-01-01T00:00:00"
-  }
-}
 ```
 
 #### Login User
@@ -121,44 +91,9 @@ Content-Type: application/json
   "email": "john@example.com",
   "password": "securepass123"
 }
-
-Response (200):
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "token_type": "bearer",
-  "user": {
-    "id": "uuid",
-    "full_name": "John Doe",
-    "email": "john@example.com",
-    "role": "room_seeker",
-    "city": "New York",
-    "phone_number": "+1234567890",
-    "is_active": true,
-    "created_at": "2024-01-01T00:00:00"
-  }
-}
 ```
 
 ## Frontend Integration
-
-### Storing Token
-
-In your frontend (React), store the token in localStorage after successful login:
-
-```javascript
-// After successful login
-const response = await fetch('http://localhost:8000/auth/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email, password })
-});
-
-const data = await response.json();
-
-// Store token
-localStorage.setItem('access_token', data.access_token);
-localStorage.setItem('user', JSON.stringify(data.user));
-```
 
 ### Making Authenticated Requests
 
@@ -173,13 +108,6 @@ const response = await fetch('http://localhost:8000/protected-route', {
 });
 ```
 
-### Logout
-
-```javascript
-localStorage.removeItem('access_token');
-localStorage.removeItem('user');
-```
-
 ## Project Structure
 
 ```
@@ -188,35 +116,17 @@ backend/
 │   ├── core/
 │   │   ├── config.py          # Settings and environment variables
 │   │   └── security.py        # JWT and password hashing
-│   ├── models/
-│   │   └── user.py            # SQLAlchemy User model
-│   ├── schemas/
-│   │   └── user.py            # Pydantic schemas for validation
-│   ├── routes/
-│   │   └── auth.py            # Authentication endpoints
-│   ├── services/
-│   │   └── auth_service.py    # Business logic
-│   ├── utils/
-│   │   └── dependencies.py    # JWT authentication dependency
-│   ├── database.py            # Database connection
-│   └── main.py                # FastAPI app initialization
-├── alembic/                   # Database migrations
-├── requirements.txt           # Python dependencies
-├── .env.example              # Environment variables template
-└── README.md                 # This file
+│   ├── models/               # SQLAlchemy models
+│   ├── schemas/              # Pydantic schemas for validation
+│   ├── routes/               # API endpoints
+│   ├── services/             # Business logic
+│   ├── utils/                # Utilities (email, file upload)
+│   ├── database.py           # Database connection
+│   └── main.py               # FastAPI app initialization
+├── alembic/                  # Database migrations
+├── requirements.txt         # Python dependencies
+└── README.md               # This file
 ```
-
-## Error Handling
-
-The API returns appropriate HTTP status codes:
-
-- `200`: Success
-- `201`: Created
-- `400`: Bad Request (validation errors, duplicate email)
-- `401`: Unauthorized (invalid credentials)
-- `403`: Forbidden (inactive account)
-- `404`: Not Found
-- `500`: Internal Server Error
 
 ## Security Features
 
@@ -226,35 +136,30 @@ The API returns appropriate HTTP status codes:
 - Input validation with Pydantic
 - SQL injection protection via SQLAlchemy ORM
 - Environment-based configuration
+- Secure file uploads via Cloudinary
 
-## Development
+## Platform Integration
 
-### Run Tests
+- **Neon PostgreSQL**: Serverless database with automatic scaling
+- **Cloudinary**: Image storage and optimization with automatic transformations
+
+## Development Commands
+
+### Start Development Server
 ```bash
-pytest
+python -m uvicorn app.main:app --reload
 ```
 
-### Create New Migration
+### Create Database Migration
 ```bash
 alembic revision --autogenerate -m "description"
 alembic upgrade head
 ```
 
-### Rollback Migration
+### Install Dependencies
 ```bash
-alembic downgrade -1
+pip install -r requirements.txt
 ```
-
-## Production Deployment
-
-1. Set strong `SECRET_KEY`
-2. Use production PostgreSQL database
-3. Set `FRONTEND_URL` to production domain
-4. Use environment variables (never commit `.env`)
-5. Enable HTTPS
-6. Use gunicorn or similar WSGI server
-7. Set up proper logging
-8. Configure rate limiting
 
 ## Support
 
