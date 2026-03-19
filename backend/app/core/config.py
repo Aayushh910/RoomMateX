@@ -15,7 +15,8 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # Server
-    FRONTEND_URL: str = "http://localhost:5173"
+    # Set this to the deployed frontend domain so backend CORS allows requests from the production UI.
+    FRONTEND_URL: str = "https://room-matex.vercel.app"
     BACKEND_HOST: str = "0.0.0.0"
     BACKEND_PORT: int = 8000
 
