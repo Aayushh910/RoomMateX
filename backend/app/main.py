@@ -59,7 +59,7 @@ def root():
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy"}
+    return {"status": "ok"}
 
 
 # Create database tables on startup (only if database is accessible)
