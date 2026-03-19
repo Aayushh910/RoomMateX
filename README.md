@@ -63,6 +63,35 @@ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 Server will start at: `http://localhost:8000`
 API Documentation: `http://localhost:8000/docs`
 
+## Deployment on Render
+
+### Prerequisites
+- Render account
+- Neon PostgreSQL database
+- Cloudinary account for file storage
+
+### 1. Prepare Environment Variables
+Set the following environment variables in Render dashboard:
+- `DATABASE_URL`: Your Neon PostgreSQL connection string
+- `SECRET_KEY`: Generate with `python -c "import secrets; print(secrets.token_urlsafe(32))"`
+- `FRONTEND_URL`: Your deployed frontend URL (e.g., `https://your-frontend.onrender.com`)
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USERNAME`, `EMAIL_PASSWORD`, `EMAIL_FROM`
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+
+### 2. Deploy to Render
+1. Connect your GitHub repository to Render
+2. Create a new Web Service
+3. Set build command: `pip install -r requirements.txt`
+4. Set start command: `uvicorn app.main:app --host 0.0.0.0 --port 10000`
+5. Deploy
+
+### 3. Run Database Migrations
+After deployment, run migrations if needed:
+```bash
+alembic upgrade head
+```
+
 ## API Endpoints
 
 ### Authentication
