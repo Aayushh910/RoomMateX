@@ -4,6 +4,14 @@ import { API_BASE_URL } from '../api/config';
 let isRefreshing = false;
 let failedQueue = [];
 
+const getErrorMessage = (error) => {
+  if (!error) return 'An unexpected error occurred.';
+  if (error.response?.data?.detail) return error.response.data.detail;
+  if (error.response?.data?.message) return error.response.data.message;
+  if (error.message) return error.message;
+  return 'An unexpected error occurred.';
+};
+
 const processQueue = (error, token = null) => {
   failedQueue.forEach(prom => {
     if (error) {
@@ -48,6 +56,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Normalize error message for UI
+    error.message = getErrorMessage(error);
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {

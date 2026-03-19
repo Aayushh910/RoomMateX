@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { userService } from '../services/userService';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 const AuthContext = createContext(null);
 
@@ -48,7 +49,7 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       return { success: true, user: userData };
     } catch (error) {
-      const message = error.response?.data?.detail || 'Login failed';
+      const message = error.message || 'Login failed';
       return { success: false, error: message };
     }
   };
@@ -63,7 +64,7 @@ export const AuthProvider = ({ children }) => {
       });
       return loginResult;
     } catch (error) {
-      const message = error.response?.data?.detail || 'Registration failed';
+      const message = error.message || 'Registration failed';
       return { success: false, error: message };
     }
   };
@@ -79,7 +80,7 @@ export const AuthProvider = ({ children }) => {
       setUser(updatedUser);
       return { success: true, user: updatedUser };
     } catch (error) {
-      const message = error.response?.data?.detail || 'Update failed';
+      const message = error.message || 'Update failed';
       return { success: false, error: message };
     }
   };
@@ -89,7 +90,7 @@ export const AuthProvider = ({ children }) => {
       await authService.sendOTP(purpose);
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.detail || 'Failed to send OTP';
+      const message = error.message || 'Failed to send OTP';
       return { success: false, error: message };
     }
   };
@@ -103,7 +104,7 @@ export const AuthProvider = ({ children }) => {
       }
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.detail || 'OTP verification failed';
+      const message = error.message || 'OTP verification failed';
       return { success: false, error: message };
     }
   };
@@ -123,6 +124,14 @@ export const AuthProvider = ({ children }) => {
     isAdmin: user?.role === 'admin',
     isVerified: user?.is_verified || false,
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Loading..." />
+      </div>
+    );
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

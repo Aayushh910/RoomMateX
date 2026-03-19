@@ -1,7 +1,7 @@
 // Centralized API configuration used across the frontend.
 // This ensures we can point the application to different backends via Vite env variables.
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://roommatex-backend.onrender.com';
 
 export const getApiUrl = (path = '') => {
   if (!path) return API_BASE_URL;

@@ -172,7 +172,7 @@ export const EditRoomPage = () => {
             showSuccess('Property updated successfully!');
             navigate('/dashboard');
         } catch (error) {
-            showError(error.response?.data?.detail || 'Failed to update property. Please try again.');
+            showError(error.message || 'Failed to update property. Please try again.');
         } finally {
             setSubmitting(false);
         }

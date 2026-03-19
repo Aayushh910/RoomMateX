@@ -123,7 +123,7 @@ export const VerificationPage = () => {
                             navigate('/');
                         }, 2000);
                     } catch (err) {
-                        setError(err.response?.data?.detail || 'Failed to delete account');
+                        setError(err.message || 'Failed to delete account');
                     }
                 } else {
                     setError(result.error || 'Invalid OTP');
@@ -165,7 +165,7 @@ export const VerificationPage = () => {
                 navigate('/profile');
             }, 2000);
         } catch (err) {
-            setError(err.response?.data?.detail || 'Failed to change password');
+            setError(err.message || 'Failed to change password');
         } finally {
             setLoading(false);
         }

@@ -224,7 +224,7 @@ export const ProfilePage = () => {
             const updatedUser = await userService.uploadProfilePhoto(croppedFile);
             setUser(updatedUser);
         } catch (error) {
-            showError(error.response?.data?.detail || 'Failed to upload profile photo');
+            showError(error.message || 'Failed to upload profile photo');
         } finally {
             setIsUploadingPhoto(false);
             setSelectedImage(null);

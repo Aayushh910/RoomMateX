@@ -36,7 +36,7 @@ export const LoginPage = () => {
       setResetStep(2);
       showSuccess('OTP sent to your email address');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to send OTP. Please try again.');
+      setError(err.message || 'Failed to send OTP. Please try again.');
     } finally {
       setResetLoading(false);
     }
@@ -56,7 +56,7 @@ export const LoginPage = () => {
       // We'll verify it when resetting the password
       setResetStep(3);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid OTP. Please try again.');
+      setError(err.message || 'Invalid OTP. Please try again.');
     } finally {
       setResetLoading(false);
     }
@@ -83,7 +83,7 @@ export const LoginPage = () => {
       setNewPassword('');
       setOtpSent(false);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to reset password. Please check your OTP and try again.');
+      setError(err.message || 'Failed to reset password. Please check your OTP and try again.');
     } finally {
       setResetLoading(false);
     }
@@ -136,7 +136,7 @@ export const LoginPage = () => {
       }
     } catch (error) {
       setLoading(false);
-      setError(error.response?.data?.detail || 'Login failed. Please check your credentials.');
+      setError(error.message || 'Login failed. Please check your credentials.');
     }
   };
 
