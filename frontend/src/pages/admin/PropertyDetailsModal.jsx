@@ -1,15 +1,5 @@
 import { XCircle, CheckCircle } from 'lucide-react';
-
-// Helper function to get correct image URL
-const getImageUrl = (imageUrl) => {
-  if (!imageUrl) return null;
-  // If it's already a full URL (Cloudinary), return as is
-  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    return imageUrl;
-  }
-  // If it's a local path, prepend backend URL
-  return `http://localhost:8000${imageUrl}`;
-};
+import { getImageUrl } from '../../utils/imageUtils';
 
 export const PropertyDetailsModal = ({ property, onClose, onToggleProperty, actionLoading }) => {
   if (!property) return null;

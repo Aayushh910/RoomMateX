@@ -207,6 +207,16 @@ npm run build
 
 This creates an optimized production build in the `dist` folder.
 
+## Deploying to Vercel
+
+1. **Create a Vercel project** and point it to this repository.
+2. **Set the root directory** to the `frontend` folder (if using a monorepo setup).
+3. **Set environment variables** in Vercel:
+   - `VITE_API_URL` – e.g. `https://your-backend-url.onrender.com`
+4. **Deploy** and Vercel will build the app with `npm run build`.
+
+> ✅ The app is configured as an SPA; unknown routes will fall back to `index.html`.
+
 ## License
 
 This project is for educational purposes.

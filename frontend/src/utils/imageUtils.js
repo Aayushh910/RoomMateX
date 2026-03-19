@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import { getApiUrl } from '../api/config';
 
 /**
  * Get full image URL from relative path
@@ -9,15 +9,8 @@ export const getImageUrl = (imagePath) => {
   if (!imagePath) {
     return 'https://via.placeholder.com/400x300?text=No+Image';
   }
-  
-  // If already a full URL (starts with http), return as is
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    return imagePath;
-  }
-  
-  // If it's a relative path, prepend the API base URL
-  const path = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-  return `${API_BASE_URL}${path}`;
+
+  return getApiUrl(imagePath);
 };
 
 /**

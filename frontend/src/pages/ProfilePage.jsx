@@ -147,19 +147,16 @@ export const ProfilePage = () => {
                 setIsEditing(false);
                 setJustSaved(true);
                 showSuccess('Profile updated successfully! Click "Edit Profile" to make more changes.');
-                console.log('Profile updated successfully');
-                
+
                 // Reset the justSaved state after 3 seconds
                 setTimeout(() => setJustSaved(false), 3000);
             } else {
                 // Show error
-                showError(result.error || 'Failed to update profile');
-                console.error('Profile update failed:', result.error);
+                showError(result.error || 'Failed to update profile. Please try again.');
             }
         } catch (error) {
             // Handle unexpected errors
-            showError('An unexpected error occurred while updating profile');
-            console.error('Unexpected error in handleSave:', error);
+            showError('An unexpected error occurred while updating profile. Please try again.');
         } finally {
             setIsSaving(false);
         }

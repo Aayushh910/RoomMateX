@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
@@ -21,6 +21,7 @@ import { ContactPage } from './pages/ContactPage';
 import { AdminDashboardPage } from './pages/admin';
 import { CompleteProfilePage } from './pages/CompleteProfilePage';
 import { UserProfileViewPage } from './pages/UserProfileViewPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 function App() {
   return (
@@ -106,8 +107,8 @@ function App() {
                 }
               />
 
-              {/* Catch all - redirect to home */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              {/* Catch all - show 404 page */}
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Router>
         </ToastProvider>
