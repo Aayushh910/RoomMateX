@@ -1,9 +1,12 @@
 import secrets
+import logging
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.core.security import get_password_hash, verify_password
 from app.utils.email import EmailService
+
+logger = logging.getLogger(__name__)
 
 
 class OTPService:
@@ -201,4 +204,7 @@ class OTPService:
             user_name=user.full_name
         )
         
-        return True  # Always return True (security)
+        if not success:
+            logger.error(f"Failed to send password reset OTP to {user.email}")
+        
+        return success  # Return actual result for debugging

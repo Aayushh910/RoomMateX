@@ -23,10 +23,14 @@ class Settings(BaseSettings):
     # Email
     EMAIL_HOST: str = "smtp.gmail.com"
     EMAIL_PORT: int = 587
-    EMAIL_USERNAME: str
-    EMAIL_PASSWORD: str
-    EMAIL_FROM: str
+    EMAIL_USERNAME: str = ""
+    EMAIL_PASSWORD: str = ""
+    EMAIL_FROM: str = ""
     EMAIL_DEV_MODE: bool = False
+    
+    # Legacy email env vars (for backward compatibility)
+    EMAIL_HOST_USER: str = ""
+    EMAIL_HOST_PASSWORD: str = ""
 
     # Admin
     ADMIN_EMAIL: str
@@ -36,6 +40,14 @@ class Settings(BaseSettings):
     CLOUDINARY_CLOUD_NAME: str
     CLOUDINARY_API_KEY: str
     CLOUDINARY_API_SECRET: str
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        # Handle backward compatibility: if new names not set, fall back to legacy names
+        if not self.EMAIL_USERNAME and self.EMAIL_HOST_USER:
+            self.EMAIL_USERNAME = self.EMAIL_HOST_USER
+        if not self.EMAIL_PASSWORD and self.EMAIL_HOST_PASSWORD:
+            self.EMAIL_PASSWORD = self.EMAIL_HOST_PASSWORD
 
     class Config:
         env_file =  ".env"

@@ -37,7 +37,14 @@ class EmailService:
         try:
             # Validate email configuration
             if not settings.EMAIL_USERNAME or not settings.EMAIL_PASSWORD:
-                logger.error("Email credentials not configured")
+                logger.error("❌ Email credentials not configured")
+                logger.error("Please set EMAIL_USERNAME and EMAIL_PASSWORD (or legacy EMAIL_HOST_USER and EMAIL_HOST_PASSWORD)")
+                print("❌ Email credentials not configured")
+                return False
+            
+            if not settings.EMAIL_FROM:
+                logger.error("❌ EMAIL_FROM not configured")
+                print("❌ EMAIL_FROM not configured")
                 return False
             
             # Create message

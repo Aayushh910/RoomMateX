@@ -42,9 +42,12 @@ CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
-EMAIL_HOST_USER=roommatex0help@gmail.com
-EMAIL_HOST_PASSWORD=your_app_password
+EMAIL_USERNAME=roommatex0help@gmail.com
+EMAIL_PASSWORD=your_app_password
+EMAIL_FROM=roommatex0help@gmail.com
 EMAIL_DEV_MODE=false
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=admin_password
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
@@ -74,9 +77,14 @@ API Documentation: `http://localhost:8000/docs`
 Set the following environment variables in Render dashboard:
 - `DATABASE_URL`: Your Neon PostgreSQL connection string
 - `SECRET_KEY`: Generate with `python -c "import secrets; print(secrets.token_urlsafe(32))"`
-- `FRONTEND_URL`: Your deployed frontend URL (e.g., `https://your-frontend.onrender.com`)
+- `FRONTEND_URL`: Your deployed frontend URL (e.g., `https://your-frontend.vercel.app`)
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
-- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USERNAME`, `EMAIL_PASSWORD`, `EMAIL_FROM`
+- `EMAIL_HOST`: `smtp.gmail.com`
+- `EMAIL_PORT`: `587`
+- `EMAIL_USERNAME`: Your Gmail address (e.g., `roommatex0help@gmail.com`)
+- `EMAIL_PASSWORD`: Your Gmail App Password (not your regular password)
+- `EMAIL_FROM`: Your Gmail address (e.g., `roommatex0help@gmail.com`)
+- `EMAIL_DEV_MODE`: `false` (set to `true` for testing; OTP will be logged instead of sent)
 - `ADMIN_EMAIL`, `ADMIN_PASSWORD`
 
 ### 2. Deploy to Render
