@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
-from app.core.config import settings
 from app.routes import auth, user, property, wishlist, dashboard, admin, notification, contact
 
 # Configure logging
@@ -33,27 +32,18 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 # CORS middleware - Must be added before routes
-# Allow the deployed frontend and local development hosts
-allowed_origins = set()
-if settings.FRONTEND_URL:
-    # Support comma-separated origins and strip trailing slashes
-    allowed_origins.update({o.strip().rstrip('/') for o in settings.FRONTEND_URL.split(',') if o.strip()})
-
-allowed_origins.update([
+origins = [
+    "https://room-matex.vercel.app",
     "http://localhost:5173",
     "http://localhost:3000",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:3000",
-])
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(allowed_origins),
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=3600,
 )
 
 # Include routers
