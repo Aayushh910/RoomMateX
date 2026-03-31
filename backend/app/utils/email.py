@@ -1,92 +1,76 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from app.core.config import settings
 import logging
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
 class EmailService:
-    """Service for sending emails via SMTP."""
+    """Service for sending emails via SendGrid."""
     
     @staticmethod
     def send_email(to_email: str, subject: str, html_body: str, reply_to: str = None) -> bool:
-        """Send an email using SMTP with optional Reply-To header."""
-        # Development mode - just log the email
+        """Send an email using SendGrid API."""
+        
+        logger.info(f"📧 Email request: To={to_email}, Subject={subject}")
+        
+        # Development mode - just log
         if settings.EMAIL_DEV_MODE:
-            logger.info("=" * 60)
+            logger.info("=" * 70)
             logger.info("📧 EMAIL (DEV MODE - Not Actually Sent)")
-            logger.info("=" * 60)
+            logger.info("=" * 70)
             logger.info(f"To: {to_email}")
             logger.info(f"Subject: {subject}")
-            if reply_to:
-                logger.info(f"Reply-To: {reply_to}")
-            logger.info("=" * 60)
-            print("\n" + "=" * 60)
-            print("📧 EMAIL SENT (DEV MODE)")
-            print("=" * 60)
+            logger.info("=" * 70)
+            print("\n" + "=" * 70)
+            print("📧 EMAIL LOGGED (DEV MODE)")
+            print("=" * 70)
             print(f"To: {to_email}")
             print(f"Subject: {subject}")
-            if reply_to:
-                print(f"Reply-To: {reply_to}")
-            print("=" * 60)
+            print("=" * 70 + "\n")
             return True
         
-        # Production mode - actually send email
+        # Production mode - send via SendGrid
+        logger.info("🚀 PRODUCTION MODE - Sending via SendGrid...")
+        
         try:
-            # Validate email configuration
-            if not settings.EMAIL_USERNAME or not settings.EMAIL_PASSWORD:
-                logger.error("❌ Email credentials not configured")
-                logger.error("Please set EMAIL_USERNAME and EMAIL_PASSWORD (or legacy EMAIL_HOST_USER and EMAIL_HOST_PASSWORD)")
-                print("❌ Email credentials not configured")
+            if not settings.SENDGRID_API_KEY:
+                logger.error("❌ SENDGRID_API_KEY not configured")
                 return False
             
-            if not settings.EMAIL_FROM:
-                logger.error("❌ EMAIL_FROM not configured")
-                print("❌ EMAIL_FROM not configured")
+            if not settings.SENDGRID_FROM_EMAIL:
+                logger.error("❌ SENDGRID_FROM_EMAIL not configured")
                 return False
+            
+            logger.info(f"Creating email from {settings.SENDGRID_FROM_EMAIL} to {to_email}")
             
             # Create message
-            message = MIMEMultipart("alternative")
-            message["Subject"] = subject
-            message["From"] = settings.EMAIL_FROM
-            message["To"] = to_email
+            message = Mail(
+                from_email=settings.SENDGRID_FROM_EMAIL,
+                to_emails=to_email,
+                subject=subject,
+                html_content=html_body
+            )
             
-            # Add Reply-To header if provided
+            # Add reply-to if provided
             if reply_to:
-                message["Reply-To"] = reply_to
+                message.reply_to = reply_to
             
-            # Attach HTML content
-            html_part = MIMEText(html_body, "html")
-            message.attach(html_part)
+            # Send via SendGrid
+            sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+            logger.info("Sending email via SendGrid API...")
             
-            # Connect to SMTP server
-            with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT, timeout=10) as server:
-                server.starttls()
-                server.login(settings.EMAIL_USERNAME, settings.EMAIL_PASSWORD)
-                server.send_message(message)
+            response = sg.send(message)
             
-            logger.info(f"Email sent successfully to {to_email}")
+            logger.info(f"✅ Email sent successfully (Status: {response.status_code})")
             print(f"✅ Email sent successfully to {to_email}")
             return True
             
-        except smtplib.SMTPAuthenticationError as e:
-            logger.error(f"SMTP Authentication failed: {e}")
-            print(f"❌ SMTP Authentication failed: {e}")
-            logger.error("Please check EMAIL_USERNAME and EMAIL_PASSWORD in .env")
-            logger.error("For Gmail, you need to use an App Password, not your regular password")
-            logger.error("See GMAIL_SETUP_GUIDE.md for instructions")
-            return False
-            
-        except smtplib.SMTPException as e:
-            logger.error(f"SMTP error sending email: {e}")
-            print(f"❌ SMTP error: {e}")
-            return False
-            
         except Exception as e:
-            logger.error(f"Unexpected error sending email: {e}")
-            print(f"❌ Unexpected error sending email: {e}")
+            logger.error(f"❌ SendGrid Error: {type(e).__name__}: {e}")
+            logger.error("Troubleshooting SendGrid issues:", exc_info=True)
+            print(f"❌ Error sending email: {e}")
             return False
     
     @staticmethod
@@ -94,13 +78,13 @@ class EmailService:
         """Send OTP verification email."""
         subject = "Verify Your RoomMateX Account"
         
-        # Development mode - show OTP clearly
+        # Development mode - show OTP
         if settings.EMAIL_DEV_MODE:
             print("\n" + "🔐" * 30)
             print(f"🔐 OTP CODE FOR {user_name}: {otp_code}")
             print("🔐" * 30 + "\n")
+            logger.info(f"📧 [DEV MODE] OTP for {user_name}: {otp_code}")
         
-        # Create HTML email with actual values
         html = f"""
         <!DOCTYPE html>
         <html>
@@ -214,13 +198,12 @@ class EmailService:
         """Send password reset OTP email."""
         subject = "Reset Your RoomMateX Password"
         
-        # Development mode - show OTP clearly
         if settings.EMAIL_DEV_MODE:
             print("\n" + "🔑" * 30)
             print(f"🔑 PASSWORD RESET OTP FOR {user_name}: {otp_code}")
             print("🔑" * 30 + "\n")
+            logger.info(f"📧 [DEV MODE] Password reset OTP for {user_name}: {otp_code}")
         
-        # Create HTML email with actual values
         html = f"""
         <!DOCTYPE html>
         <html>
@@ -329,13 +312,12 @@ class EmailService:
         """Send account deletion OTP email."""
         subject = "Delete Your RoomMateX Account"
         
-        # Development mode - show OTP clearly
         if settings.EMAIL_DEV_MODE:
             print("\n" + "🗑️" * 30)
             print(f"🗑️ ACCOUNT DELETE OTP FOR {user_name}: {otp_code}")
             print("🗑️" * 30 + "\n")
+            logger.info(f"📧 [DEV MODE] Account delete OTP for {user_name}: {otp_code}")
         
-        # Create HTML email with actual values
         html = f"""
         <!DOCTYPE html>
         <html>
@@ -381,7 +363,7 @@ class EmailService:
                         <div style="
                         display:inline-block;
                         background-color:#fee2e2;
-                        border:2px solid:#dc2626;
+                        border:2px solid #dc2626;
                         padding:18px 40px;
                         border-radius:6px;">
                         <span style="
@@ -442,7 +424,3 @@ class EmailService:
         """
         
         return EmailService.send_email(to_email, subject, html)
-
-
-
-

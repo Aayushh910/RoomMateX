@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     BACKEND_HOST: str = "0.0.0.0"
     BACKEND_PORT: int = 8000
 
-    # Email
+    # Email (SMTP - Kept for backward compatibility)
     EMAIL_HOST: str = "smtp.gmail.com"
     EMAIL_PORT: int = 587
     EMAIL_USERNAME: str = ""
@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     EMAIL_HOST_USER: str = ""
     EMAIL_HOST_PASSWORD: str = ""
 
+    # SendGrid (NEW - Recommended)
+    SENDGRID_API_KEY: str = ""
+    SENDGRID_FROM_EMAIL: str = ""
+    
     # Admin
     ADMIN_EMAIL: str
     ADMIN_PASSWORD: str
@@ -50,7 +54,7 @@ class Settings(BaseSettings):
             self.EMAIL_PASSWORD = self.EMAIL_HOST_PASSWORD
 
     class Config:
-        env_file =  ".env"
+        env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
         extra = "ignore"  # Ignore extra environment variables
