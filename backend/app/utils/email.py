@@ -1,6 +1,4 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import resend
 from app.core.config import settings
 import logging
 
@@ -8,11 +6,11 @@ logger = logging.getLogger(__name__)
 
 
 class EmailService:
-    """Service for sending emails via Gmail SMTP."""
+    """Service for sending emails via Resend API."""
     
     @staticmethod
     def send_email(to_email: str, subject: str, html_body: str, reply_to: str = None) -> bool:
-        """Send an email using Gmail SMTP with SSL port 465."""
+        """Send an email using Resend API."""
         
         logger.info(f"📧 Email request: To={to_email}, Subject={subject}")
         
@@ -32,65 +30,34 @@ class EmailService:
             print("=" * 70 + "\n")
             return True
         
-        # Production mode - send via Gmail SMTP
-        logger.info("🚀 PRODUCTION MODE - Sending via Gmail SMTP SSL...")
+        # Production mode - send via Resend API
+        logger.info("🚀 PRODUCTION MODE - Sending via Resend API...")
         
         try:
-            if not settings.EMAIL_USERNAME or not settings.EMAIL_PASSWORD:
-                logger.error("❌ Email credentials not configured")
+            if not settings.RESEND_API_KEY:
+                logger.error("❌ RESEND_API_KEY not configured")
                 return False
             
-            if not settings.EMAIL_FROM:
-                logger.error("❌ EMAIL_FROM not configured")
-                return False
+            resend.api_key = settings.RESEND_API_KEY
             
-            logger.info(f"Connecting to {settings.EMAIL_HOST}:{settings.EMAIL_PORT} (SSL)...")
-            
-            # Create message
-            message = MIMEMultipart("alternative")
-            message["Subject"] = subject
-            message["From"] = settings.EMAIL_FROM
-            message["To"] = to_email
+            params = {
+                "from": "RoomMateX <onboarding@resend.dev>",
+                "to": [to_email],
+                "subject": subject,
+                "html": html_body
+            }
             
             if reply_to:
-                message["Reply-To"] = reply_to
+                params["reply_to"] = reply_to
             
-            # Attach HTML content
-            html_part = MIMEText(html_body, "html")
-            message.attach(html_part)
-            
-            # Connect to Gmail SMTP with SSL (port 465)
-            # This is the key: SSL on port 465 works on Render
-            logger.info("Establishing SSL connection...")
-            server = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT, timeout=10)
-            logger.info("✓ Connected to SMTP server via SSL")
-            
-            # Login
-            server.login(settings.EMAIL_USERNAME, settings.EMAIL_PASSWORD)
-            logger.info("✓ Authenticated with Gmail")
-            
-            # Send
-            server.send_message(message)
-            logger.info(f"✓ Message queued for sending")
-            
-            server.quit()
+            email = resend.Emails.send(params)
             
             logger.info(f"✅ Email sent successfully to {to_email}")
             print(f"✅ Email sent successfully to {to_email}")
             return True
             
-        except smtplib.SMTPAuthenticationError as e:
-            logger.error(f"❌ SMTP Auth Error: {e}")
-            logger.error("Check EMAIL_USERNAME and EMAIL_PASSWORD (App Password for Gmail)")
-            return False
-            
-        except smtplib.SMTPException as e:
-            logger.error(f"❌ SMTP Error: {e}")
-            return False
-            
         except Exception as e:
-            logger.error(f"❌ Unexpected Error: {type(e).__name__}: {e}")
-            logger.error("Error details:", exc_info=True)
+            logger.error(f"❌ Resend Error: {type(e).__name__}: {e}")
             return False
     
     @staticmethod

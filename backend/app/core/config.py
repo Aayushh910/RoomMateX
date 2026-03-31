@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     SENDGRID_API_KEY: str = ""
     SENDGRID_FROM_EMAIL: str = ""
     
+    # Resend (Alternative)
+    RESEND_API_KEY: str = ""
+    
     # Admin
     ADMIN_EMAIL: str
     ADMIN_PASSWORD: str
@@ -73,26 +76,16 @@ def log_email_config():
     logger.info("=" * 70)
     logger.info(f"EMAIL_DEV_MODE: {settings.EMAIL_DEV_MODE}")
     
-    if settings.SENDGRID_API_KEY:
-        # Show only first 10 chars of API key for security
-        masked_key = settings.SENDGRID_API_KEY[:10] + "..." if len(settings.SENDGRID_API_KEY) > 10 else "***"
-        logger.info(f"SENDGRID_API_KEY: {masked_key} (configured ✓)")
-        
-        # Validate API key format
-        if not settings.SENDGRID_API_KEY.startswith("SG."):
-            logger.warning("⚠️ WARNING: SENDGRID_API_KEY should start with 'SG.'")
+    if settings.RESEND_API_KEY:
+        masked_key = settings.RESEND_API_KEY[:10] + "..." if len(settings.RESEND_API_KEY) > 10 else "***"
+        logger.info(f"RESEND_API_KEY: {masked_key} (configured ✓)")
     else:
-        logger.warning("⚠️ SENDGRID_API_KEY: Not configured")
-    
-    if settings.SENDGRID_FROM_EMAIL:
-        logger.info(f"SENDGRID_FROM_EMAIL: {settings.SENDGRID_FROM_EMAIL} (configured ✓)")
-    else:
-        logger.warning("⚠️ SENDGRID_FROM_EMAIL: Not configured")
+        logger.warning("⚠️ RESEND_API_KEY: Not configured")
     
     if settings.EMAIL_DEV_MODE:
         logger.info("🔧 Development Mode: Emails will be logged, not sent")
     else:
-        logger.info("🚀 Production Mode: Emails will be sent via SendGrid")
+        logger.info("🚀 Production Mode: Emails will be sent via Resend")
     
     logger.info("=" * 70)
 
