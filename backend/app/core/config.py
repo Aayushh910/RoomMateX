@@ -61,3 +61,40 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Log configuration on startup (without exposing secrets)
+import logging
+logger = logging.getLogger(__name__)
+
+def log_email_config():
+    """Log email configuration for debugging (without exposing secrets)."""
+    logger.info("=" * 70)
+    logger.info("📧 EMAIL CONFIGURATION")
+    logger.info("=" * 70)
+    logger.info(f"EMAIL_DEV_MODE: {settings.EMAIL_DEV_MODE}")
+    
+    if settings.SENDGRID_API_KEY:
+        # Show only first 10 chars of API key for security
+        masked_key = settings.SENDGRID_API_KEY[:10] + "..." if len(settings.SENDGRID_API_KEY) > 10 else "***"
+        logger.info(f"SENDGRID_API_KEY: {masked_key} (configured ✓)")
+        
+        # Validate API key format
+        if not settings.SENDGRID_API_KEY.startswith("SG."):
+            logger.warning("⚠️ WARNING: SENDGRID_API_KEY should start with 'SG.'")
+    else:
+        logger.warning("⚠️ SENDGRID_API_KEY: Not configured")
+    
+    if settings.SENDGRID_FROM_EMAIL:
+        logger.info(f"SENDGRID_FROM_EMAIL: {settings.SENDGRID_FROM_EMAIL} (configured ✓)")
+    else:
+        logger.warning("⚠️ SENDGRID_FROM_EMAIL: Not configured")
+    
+    if settings.EMAIL_DEV_MODE:
+        logger.info("🔧 Development Mode: Emails will be logged, not sent")
+    else:
+        logger.info("🚀 Production Mode: Emails will be sent via SendGrid")
+    
+    logger.info("=" * 70)
+
+# Call on module load
+log_email_config()

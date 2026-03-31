@@ -70,10 +70,32 @@ def health_check():
 # Create database tables on startup (only if database is accessible)
 @app.on_event("startup")
 async def startup_event():
+    logger.info("=" * 70)
+    logger.info("🚀 ROOMMATEX API STARTING UP")
+    logger.info("=" * 70)
+    
     try:
         from app.database import engine, Base
         Base.metadata.create_all(bind=engine)
-        logger.info("✓ Database tables created successfully")
+        logger.info("✅ Database tables created successfully")
     except Exception as e:
-        logger.warning(f"⚠ Warning: Could not create database tables: {e}")
-        logger.warning("⚠ Please ensure PostgreSQL is running and credentials are correct")
+        logger.warning(f"⚠️ Warning: Could not create database tables: {e}")
+        logger.warning("⚠️ Please ensure PostgreSQL is running and credentials are correct")
+    
+    # Log email configuration status
+    from app.core.config import settings
+    logger.info("")
+    logger.info("📧 Email Service Status:")
+    if settings.EMAIL_DEV_MODE:
+        logger.info("   Mode: DEVELOPMENT (emails logged only)")
+    else:
+        logger.info("   Mode: PRODUCTION (emails sent via SendGrid)")
+        if settings.SENDGRID_API_KEY and settings.SENDGRID_FROM_EMAIL:
+            logger.info("   SendGrid: ✅ Configured")
+        else:
+            logger.warning("   SendGrid: ⚠️ Missing configuration")
+    
+    logger.info("")
+    logger.info("=" * 70)
+    logger.info("✅ RoomMateX API Ready!")
+    logger.info("=" * 70)
