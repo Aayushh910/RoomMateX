@@ -1,17 +1,18 @@
-import logging
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from app.core.config import settings
+import logging
 
 logger = logging.getLogger(__name__)
 
 
 class EmailService:
-    """Service for sending emails via SendGrid."""
+    """Service for sending emails via Gmail SMTP."""
     
     @staticmethod
     def send_email(to_email: str, subject: str, html_body: str, reply_to: str = None) -> bool:
-        """Send an email using SendGrid API."""
+        """Send an email using Gmail SMTP with SSL port 465."""
         
         logger.info(f"📧 Email request: To={to_email}, Subject={subject}")
         
@@ -31,46 +32,65 @@ class EmailService:
             print("=" * 70 + "\n")
             return True
         
-        # Production mode - send via SendGrid
-        logger.info("🚀 PRODUCTION MODE - Sending via SendGrid...")
+        # Production mode - send via Gmail SMTP
+        logger.info("🚀 PRODUCTION MODE - Sending via Gmail SMTP SSL...")
         
         try:
-            if not settings.SENDGRID_API_KEY:
-                logger.error("❌ SENDGRID_API_KEY not configured")
+            if not settings.EMAIL_USERNAME or not settings.EMAIL_PASSWORD:
+                logger.error("❌ Email credentials not configured")
                 return False
             
-            if not settings.SENDGRID_FROM_EMAIL:
-                logger.error("❌ SENDGRID_FROM_EMAIL not configured")
+            if not settings.EMAIL_FROM:
+                logger.error("❌ EMAIL_FROM not configured")
                 return False
             
-            logger.info(f"Creating email from {settings.SENDGRID_FROM_EMAIL} to {to_email}")
+            logger.info(f"Connecting to {settings.EMAIL_HOST}:{settings.EMAIL_PORT} (SSL)...")
             
             # Create message
-            message = Mail(
-                from_email=settings.SENDGRID_FROM_EMAIL,
-                to_emails=to_email,
-                subject=subject,
-                html_content=html_body
-            )
+            message = MIMEMultipart("alternative")
+            message["Subject"] = subject
+            message["From"] = settings.EMAIL_FROM
+            message["To"] = to_email
             
-            # Add reply-to if provided
             if reply_to:
-                message.reply_to = reply_to
+                message["Reply-To"] = reply_to
             
-            # Send via SendGrid
-            sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-            logger.info("Sending email via SendGrid API...")
+            # Attach HTML content
+            html_part = MIMEText(html_body, "html")
+            message.attach(html_part)
             
-            response = sg.send(message)
+            # Connect to Gmail SMTP with SSL (port 465)
+            # This is the key: SSL on port 465 works on Render
+            logger.info("Establishing SSL connection...")
+            server = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT, timeout=10)
+            logger.info("✓ Connected to SMTP server via SSL")
             
-            logger.info(f"✅ Email sent successfully (Status: {response.status_code})")
+            # Login
+            server.login(settings.EMAIL_USERNAME, settings.EMAIL_PASSWORD)
+            logger.info("✓ Authenticated with Gmail")
+            
+            # Send
+            server.send_message(message)
+            logger.info(f"✓ Message queued for sending")
+            
+            server.quit()
+            
+            logger.info(f"✅ Email sent successfully to {to_email}")
             print(f"✅ Email sent successfully to {to_email}")
             return True
             
+        except smtplib.SMTPAuthenticationError as e:
+            logger.error(f"❌ SMTP Auth Error: {e}")
+            logger.error("Check EMAIL_USERNAME and EMAIL_PASSWORD (App Password for Gmail)")
+            return False
+            
+        except smtplib.SMTPException as e:
+            logger.error(f"❌ SMTP Error: {e}")
+            return False
+            
         except Exception as e:
-            logger.error(f"❌ SendGrid Error: {type(e).__name__}: {e}")
-            logger.error("Troubleshooting SendGrid issues:", exc_info=True)
-            print(f"❌ Error sending email: {e}")
+            logger.error(f"❌ Unexpected Error: {type(e).__name__}: {e}")
+            logger.error("Error details:", exc_info=True)
             return False
     
     @staticmethod
@@ -78,7 +98,6 @@ class EmailService:
         """Send OTP verification email."""
         subject = "Verify Your RoomMateX Account"
         
-        # Development mode - show OTP
         if settings.EMAIL_DEV_MODE:
             print("\n" + "🔐" * 30)
             print(f"🔐 OTP CODE FOR {user_name}: {otp_code}")
