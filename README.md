@@ -1,203 +1,148 @@
-# RoomMateX Backend API
+<div align="center">
 
-Production-ready FastAPI backend for RoomMateX room/roommate finding platform.
+# 🏠 RoomMateX
 
-## Tech Stack
+**Smart Room & Roommate Discovery Platform**
 
-- **Framework**: FastAPI
-- **Database**: Neon PostgreSQL (Serverless)
-- **ORM**: SQLAlchemy
-- **Authentication**: JWT (JSON Web Tokens)
-- **Password Hashing**: bcrypt
-- **Validation**: Pydantic
-- **Migrations**: Alembic
-- **File Storage**: Cloudinary
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=Cloudinary&logoColor=white)](https://cloudinary.com/)
 
-## Local Development Setup
+A full-stack web platform connecting room seekers with property owners — with verification, smart recommendations, and admin moderation.
 
-### 1. Install Dependencies
+> 📦 For setup & installation instructions, see [SETUP.md](./SETUP.md)
 
-```bash
-cd backend
-pip install -r requirements.txt
-```
+</div>
 
-### 2. Configure Environment Variables
+---
 
-Copy `.env.example` to `.env` in the **root directory**:
+## 📌 Problem & Solution
 
-```bash
-copy .env.example .env
-```
+Finding accommodation is slow, unsafe, and unverified. RoomMateX provides a **secure, centralized platform** for discovering rooms and compatible roommates based on preferences, budget, and lifestyle.
 
-Edit `.env` with your Neon and Cloudinary credentials:
-```
-DATABASE_URL=postgresql://username:password@ep-example.us-east-2.aws.neon.tech/roommateX?sslmode=require
-SECRET_KEY=your-super-secret-key-change-this
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-FRONTEND_URL=http://localhost:5173
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USERNAME=roommatex0help@gmail.com
-EMAIL_PASSWORD=your_app_password
-EMAIL_FROM=roommatex0help@gmail.com
-EMAIL_DEV_MODE=false
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=admin_password
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-```
+---
 
-**Generate a secure SECRET_KEY**:
-```bash
-python -c "import secrets; print(secrets.token_urlsafe(32))"
-```
+## ✨ Features
 
-### 3. Run the Server
+### 👤 Users
+- Email registration with OTP verification + Google OAuth
+- Advanced property search (city, rent, type, tenant preference)
+- Wishlist, reviews, and property reporting
+- Personalized dashboard with preference-based recommendations
+- Profile completeness gating for sensitive features
 
-```bash
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+### 🏘️ Property Owners
+- Create/edit/delete listings with multi-image upload (min. 3)
+- Manage listing status (active/inactive)
+- View and respond to reviews
 
-Server will start at: `http://localhost:8000`
-API Documentation: `http://localhost:8000/docs`
+### 🛡️ Admins
+- User verification & role management
+- Property moderation (activate/deactivate/delete)
+- Report management with custom notices to reporters and owners
+- Dashboard analytics (users, properties, reviews, reports)
 
-## Deployment on Render
+---
 
-### Prerequisites
-- Render account
-- Neon PostgreSQL database
-- Cloudinary account for file storage
+## 🛠️ Tech Stack
 
-### 1. Prepare Environment Variables
-Set the following environment variables in Render dashboard:
-- `DATABASE_URL`: Your Neon PostgreSQL connection string
-- `SECRET_KEY`: Generate with `python -c "import secrets; print(secrets.token_urlsafe(32))"`
-- `FRONTEND_URL`: Your deployed frontend URL (e.g., `https://your-frontend.vercel.app`)
-- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
-- `EMAIL_HOST`: `smtp.gmail.com`
-- `EMAIL_PORT`: `587`
-- `EMAIL_USERNAME`: Your Gmail address (e.g., `roommatex0help@gmail.com`)
-- `EMAIL_PASSWORD`: Your Gmail App Password (not your regular password)
-- `EMAIL_FROM`: Your Gmail address (e.g., `roommatex0help@gmail.com`)
-- `EMAIL_DEV_MODE`: `false` (set to `true` for testing; OTP will be logged instead of sent)
-- `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, Vite, Tailwind CSS, React Router v6, Axios |
+| Backend | FastAPI, SQLAlchemy 2.0, Pydantic, Alembic |
+| Database | Neon PostgreSQL (Serverless) |
+| Auth | JWT, Bcrypt, Google OAuth 2.0, OTP via SMTP |
+| Storage | Cloudinary (images + CDN) |
+| Email | Gmail SMTP |
 
-### 2. Deploy to Render
-1. Connect your GitHub repository to Render
-2. Create a new Web Service
-3. Set build command: `pip install -r requirements.txt`
-4. Set start command: `uvicorn app.main:app --host 0.0.0.0 --port 10000`
-5. Deploy
+---
 
-### 3. Run Database Migrations
-After deployment, run migrations if needed:
-```bash
-alembic upgrade head
-```
+## 🗄️ Database Schema
 
-## API Endpoints
+- **Users** — profile, preferences, verification flags, OAuth
+- **Properties** — listing details, rent, status, owner FK
+- **Property Images / Amenities / House Rules** — cascade on delete
+- **Reviews** — rating (1–5), comment, user + property FK
+- **Wishlists** — unique (user, property) pairs
+- **Reports** — reason, status, admin/owner notices, read flags
 
-### Authentication
+---
 
-#### Register User
-```
-POST /auth/register
-Content-Type: application/json
+## 🔐 Security
 
-{
-  "full_name": "John Doe",
-  "phone_number": "+1234567890",
-  "email": "john@example.com",
-  "password": "securepass123",
-  "city": "New York",
-  "role": "room_seeker"
-}
-```
+- JWT access tokens (30-min expiry)
+- Bcrypt password hashing (cost factor 12)
+- 6-digit OTP with 10-min expiry for sensitive operations
+- Role-Based Access Control: `User` / `Owner` / `Admin`
+- CORS, SQL injection prevention via ORM, input validation via Pydantic
 
-#### Login User
-```
-POST /auth/login
-Content-Type: application/json
+---
 
-{
-  "email": "john@example.com",
-  "password": "securepass123"
-}
-```
+## 🌐 API Overview
 
-## Frontend Integration
+| Domain | Endpoints |
+|--------|-----------|
+| Auth | Register, Login, Google OAuth, OTP, Password Reset |
+| Users | Profile CRUD, Photo Upload, OTP Operations |
+| Properties | CRUD, Search/Filter, My Listings |
+| Reviews | Add, Edit, Delete per property |
+| Wishlist | Add, View, Remove |
+| Reports | Submit, Track, Mark Read |
+| Dashboard | Recommendations, Stats |
+| Admin | User/Property/Report Management, Analytics |
+| Notifications | Fetch, Mark Read |
 
-### Making Authenticated Requests
+> Full interactive API docs available at `/docs` when running locally.
 
-```javascript
-const token = localStorage.getItem('access_token');
+---
 
-const response = await fetch('http://localhost:8000/protected-route', {
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
-  }
-});
-```
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-backend/
-├── app/
-│   ├── core/
-│   │   ├── config.py          # Settings and environment variables
-│   │   └── security.py        # JWT and password hashing
-│   ├── models/               # SQLAlchemy models
-│   ├── schemas/              # Pydantic schemas for validation
-│   ├── routes/               # API endpoints
-│   ├── services/             # Business logic
-│   ├── utils/                # Utilities (email, file upload)
-│   ├── database.py           # Database connection
-│   └── main.py               # FastAPI app initialization
-├── alembic/                  # Database migrations
-├── requirements.txt         # Python dependencies
-└── README.md               # This file
+roommateX/
+├── backend/
+│   └── app/
+│       ├── core/          # Config, security
+│       ├── models/        # DB models
+│       ├── schemas/       # Pydantic schemas
+│       ├── routes/        # API route handlers
+│       ├── services/      # Business logic
+│       └── utils/         # Email, upload, JWT helpers
+├── frontend/
+│   └── src/
+│       ├── components/    # Navbar, Modals, Guards
+│       ├── context/       # Auth, Theme, Toast
+│       ├── pages/         # All page components + Admin views
+│       └── services/      # Axios API call modules
+├── .env.example
+├── README.md              # ← You are here
+└── SETUP.md               # Installation & configuration guide
 ```
 
-## Security Features
+---
 
-- Password hashing with bcrypt
-- JWT token authentication
-- CORS protection
-- Input validation with Pydantic
-- SQL injection protection via SQLAlchemy ORM
-- Environment-based configuration
-- Secure file uploads via Cloudinary
+## 🔮 Planned Enhancements
 
-## Platform Integration
+- [ ] Scalability in location (Current Only for Gujarat)
+- [ ] Real-time chat (WebSocket)
+- [ ] Payment integration (Razorpay/Stripe)
+- [ ] Mobile app (React Native)
+- [ ] AI-powered roommate matching (ML)
+- [ ] Multi-language support
 
-- **Neon PostgreSQL**: Serverless database with automatic scaling
-- **Cloudinary**: Image storage and optimization with automatic transformations
+---
 
-## Development Commands
+## 📄 License
 
-### Start Development Server
-```bash
-python -m uvicorn app.main:app --reload
-```
+Developed for academic purposes. All rights reserved.
 
-### Create Database Migration
-```bash
-alembic revision --autogenerate -m "description"
-alembic upgrade head
-```
+---
 
-### Install Dependencies
-```bash
-pip install -r requirements.txt
-```
+<div align="center">
 
-## Support
+**Built with ❤️ by [Aayush Savaliya & Mahek Saradva]**  
 
-For issues or questions, contact the development team.
+📧 roommatex0help@gmail.com
+</div>
